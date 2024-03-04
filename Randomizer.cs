@@ -16,15 +16,23 @@ namespace TaijiRandomizer
             get { return _instance; }
         }
 
+        private Random? _rng = null;
+
+        public Random? Rng
+        {
+            get { return _rng; }
+        }
+
         [HarmonyPatch(typeof(PuzzlePanelStartTile), "ToggleTile")]
         static class ToggleTilePatch
         {
             public static bool Prefix(PuzzlePanelStartTile __instance)
             {
-                if (Randomizer.Instance != null) {
+                if (Randomizer.Instance != null)
+                {
                     Randomizer.Instance?.LoggerInstance.Msg($"Panel {__instance.panelToControl.id} is {__instance.panelToControl.width}x{__instance.panelToControl.height}");
                 }
-                
+
                 return true;
             }
         }
@@ -36,6 +44,14 @@ namespace TaijiRandomizer
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
+            LoggerInstance.Msg("Start generation...");
+
+            Random seedRng = new();
+            int seed = seedRng.Next(100000, 1000000);
+            LoggerInstance.Msg($"Seed: {seed}");
+
+            _rng = new Random(seed);
+
             Puzzle hello = new();
             hello.Load(46);
             hello.SetSymbol(0, 0, Puzzle.Symbol.OnePetal, Puzzle.Color.Black);
@@ -45,6 +61,14 @@ namespace TaijiRandomizer
             hello.SetSymbol(0, 3, Puzzle.Symbol.OneAntiPip, Puzzle.Color.Gray);
             hello.SetSymbol(3, 3, Puzzle.Symbol.Diamond, Puzzle.Color.Black);
             hello.Save(46);
+
+            Generator gen97 = new(97);
+            gen97.SetLocks(6);
+            gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Black, 6);
+            gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
+            gen97.Generate();
+
+            LoggerInstance.Msg("Done!");
         }
 
         public override void OnDeinitializeMelon()
