@@ -63,13 +63,13 @@ namespace TaijiRandomizer
             hello.Save(46);
 
             Generator gen97 = new(97);
-            //gen97.SetLocks(6);
+            gen97.SetLocks(6);
             gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Black, 4);
             gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
-            gen97.Add(Puzzle.Symbol.TwoPetals, Puzzle.Color.Black, 1);
-            gen97.Add(Puzzle.Symbol.FourPetals, Puzzle.Color.Black, 1);
-            gen97.Add(Puzzle.Symbol.ZeroPetals, Puzzle.Color.Black, 1);
-            gen97.Add(Puzzle.Symbol.Flower, Puzzle.Color.Black, 1);
+            gen97.SetFlowers(2, 1);
+            gen97.SetFlowers(4, 1);
+            gen97.SetFlowers(0, 1);
+            gen97.SetWildcardFlowers(1);
             gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 1);
             gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.PetalPurple, 1);
             gen97.Generate();

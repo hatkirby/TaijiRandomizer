@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static TaijiRandomizer.Puzzle;
 
 namespace TaijiRandomizer
 {
@@ -14,6 +15,10 @@ namespace TaijiRandomizer
         private readonly Puzzle _puzzle = new();
 
         private readonly List<(Puzzle.Symbol symbol, Puzzle.Color color, int amount)> _symbols = new();
+
+        private readonly Dictionary<int, int> _flowers = new();
+        private int _wildcardFlowers = 0;
+
         private int _locks = 0;
         private readonly List<(int x, int y, Puzzle.Symbol symbol, Puzzle.Color color)> _forced = new();
         private readonly List<(int x, int y, bool lit)> _locked = new();
@@ -27,6 +32,23 @@ namespace TaijiRandomizer
         public void Add(Puzzle.Symbol symbol, Puzzle.Color color, int amount)
         {
             _symbols.Add((symbol, color, amount));
+        }
+
+        public void SetFlowers(int petals, int amount)
+        {
+            if (petals >= 0 && petals <= 4)
+            {
+                _flowers[petals] = amount;
+            }
+            else
+            {
+                throw new System.ArgumentOutOfRangeException("Petal number out of range");
+            }
+        }
+
+        public void SetWildcardFlowers(int amount)
+        {
+            _wildcardFlowers = amount;
         }
 
         public void ForceTile(int x, int y, Puzzle.Symbol symbol, Puzzle.Color color)
@@ -92,26 +114,20 @@ namespace TaijiRandomizer
             }
 
             // Place any requested specific flower symbols.
-            foreach (var req in _symbols)
+            if (_flowers.Count > 0)
             {
-                if (Puzzle.IsFlower(req.symbol))
+                if (!PlaceFlowers())
                 {
-                    if (!PlaceFlowers(req.symbol, req.amount))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
 
             // Place any requested wildcard flower symbols.
-            foreach (var req in _symbols)
+            if (_wildcardFlowers > 0)
             {
-                if (req.symbol == Puzzle.Symbol.Flower)
+                if (!PlaceWildcardFlowers())
                 {
-                    if (!PlaceWildcardFlowers(req.amount))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
 
@@ -242,36 +258,45 @@ namespace TaijiRandomizer
             return result;
         }
 
-        private bool PlaceFlowers(Puzzle.Symbol symbol, int amount)
+        private bool PlaceFlowers()
         {
-            int petals = Puzzle.CountFlowerPetals(symbol);
-            List<Puzzle.Coord> spots = new();
+            Dictionary<int, List<Puzzle.Coord>> spots = new();
+            foreach (int petals in _flowers.Keys)
+            {
+                spots[petals] = new();
+            }
 
             foreach (Puzzle.Coord pos in _puzzle.OpenTiles)
             {
-                if (CountAdjacentMatchingTiles(pos) == petals)
+                int matching = CountAdjacentMatchingTiles(pos);
+                if (_flowers.Keys.Contains(matching))
                 {
-                    spots.Add(pos);
+                    spots[matching].Add(pos);
                 }
             }
 
-            if (spots.Count < amount)
+            foreach ((int petals, int amount) in _flowers)
             {
-                return false;
-            }
+                if (spots[petals].Count < amount)
+                {
+                    return false;
+                }
 
-            for (int i = 0; i < amount; i++)
-            {
-                Puzzle.Coord pos = spots[Randomizer.Instance?.Rng?.Next(spots.Count) ?? 0];
-                _puzzle.SetSymbol(pos.x, pos.y, symbol, Puzzle.Color.Black);
-                spots.Remove(pos);
+                for (int i = 0; i < amount; i++)
+                {
+                    Puzzle.Coord pos = spots[petals][Randomizer.Instance?.Rng?.Next(spots[petals].Count) ?? 0];
+                    _puzzle.SetSymbol(pos.x, pos.y, Puzzle.GetFlowerWithPetals(petals), Puzzle.Color.Black);
+                    spots[petals].Remove(pos);
+                }
             }
 
             return true;
         }
 
-        private bool PlaceWildcardFlowers(int amount)
+        private bool PlaceWildcardFlowers()
         {
+            int amount = _wildcardFlowers;
+
             while (amount > 0)
             {
                 if (_puzzle.OpenTiles.Count == 0)
