@@ -9,6 +9,7 @@ namespace TaijiRandomizer
         {
             None = 0,
 
+            Dice = 1000,
             OnePip = 1,
             TwoPips = 2,
             ThreePips = 3,
@@ -19,6 +20,7 @@ namespace TaijiRandomizer
             EightPips = 8,
             NinePips = 9,
 
+            AntiDice = 1001,
             OneAntiPip = -1,
             TwoAntiPips = -2,
             ThreeAntiPips = -3,
@@ -29,6 +31,7 @@ namespace TaijiRandomizer
             EightAntiPips = -8,
             NineAntiPips = -9,
 
+            Flower = 1002,
             ZeroPetals = 50,
             OnePetal = 10,
             TwoPetals = 20,
@@ -38,6 +41,36 @@ namespace TaijiRandomizer
             Diamond = 60,
             Bar = 80,
             Slash = 90,
+        }
+
+        public static Symbol GetFlowerWithPetals(int petals)
+        {
+            switch (petals)
+            {
+                case 0: return Symbol.ZeroPetals;
+                case 1: return Symbol.OnePetal;
+                case 2: return Symbol.TwoPetals;
+                case 3: return Symbol.ThreePetals;
+                default: return Symbol.FourPetals;
+            }
+        }
+
+        public static int CountFlowerPetals(Symbol symbol)
+        {
+            switch (symbol)
+            {
+                case Symbol.ZeroPetals: return 0;
+                case Symbol.OnePetal: return 1;
+                case Symbol.TwoPetals: return 2;
+                case Symbol.ThreePetals: return 3;
+                case Symbol.FourPetals: return 4;
+                default: return -1;
+            }
+        }
+
+        public static bool IsFlower(Symbol symbol)
+        {
+            return (symbol == Symbol.ZeroPetals || symbol == Symbol.OnePetal || symbol == Symbol.TwoPetals || symbol == Symbol.ThreePetals || symbol == Symbol.FourPetals);
         }
 
         public enum Color

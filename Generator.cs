@@ -31,7 +31,8 @@ namespace TaijiRandomizer
 
         public void ForceTile(int x, int y, Puzzle.Symbol symbol, Puzzle.Color color)
         {
-            _forced.Add((x, y, symbol, color));
+            // Does not work yet.
+            //_forced.Add((x, y, symbol, color));
         }
 
         public void LockTile(int x, int y, bool lit)
@@ -86,6 +87,30 @@ namespace TaijiRandomizer
                     if (Randomizer.Instance?.Rng?.Next(2) == 0)
                     {
                         _puzzle.SetSolution(x, y, true);
+                    }
+                }
+            }
+
+            // Place any requested specific flower symbols.
+            foreach (var req in _symbols)
+            {
+                if (Puzzle.IsFlower(req.symbol))
+                {
+                    if (!PlaceFlowers(req.symbol, req.amount))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Place any requested wildcard flower symbols.
+            foreach (var req in _symbols)
+            {
+                if (req.symbol == Puzzle.Symbol.Flower)
+                {
+                    if (!PlaceWildcardFlowers(req.amount))
+                    {
+                        return false;
                     }
                 }
             }
@@ -169,13 +194,98 @@ namespace TaijiRandomizer
             int result = 0;
             foreach (var tile in tiles)
             {
-                if (_puzzle.GetColor(tile.x, tile.y) == color && _puzzle.GetSymbol(tile.x, tile.y) != Puzzle.Symbol.None)
+                Puzzle.Symbol symbol = _puzzle.GetSymbol(tile.x, tile.y);
+
+                if (Puzzle.IsFlower(symbol))
+                {
+                    if (color == Puzzle.Color.Gold && Puzzle.CountFlowerPetals(symbol) >= 1)
+                    {
+                        result++;
+                    }
+                    else if (color == Puzzle.Color.PetalPurple && Puzzle.CountFlowerPetals(symbol) < 4)
+                    {
+                        result++;
+                    }
+                }
+                else if (symbol != Puzzle.Symbol.None)
+                {
+                    if (_puzzle.GetColor(tile.x, tile.y) == color)
+                    {
+                        result++;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private int CountAdjacentMatchingTiles(Puzzle.Coord coord)
+        {
+            int result = 0;
+            bool match = _puzzle.IsInSolution(coord.x, coord.y);
+            List<Puzzle.Coord> coords = new()
+            {
+                new(coord.x-1, coord.y),
+                new(coord.x+1, coord.y),
+                new(coord.x, coord.y-1),
+                new(coord.x, coord.y+1)
+            };
+
+            foreach (Puzzle.Coord adj in coords)
+            {
+                if (adj.x >= 0 && adj.x < _puzzle.Width && adj.y >= 0 && adj.y < _puzzle.Height && !_puzzle.IsDisabled(adj.x, adj.y) && _puzzle.IsInSolution(adj.x, adj.y) == match)
                 {
                     result++;
                 }
             }
 
             return result;
+        }
+
+        private bool PlaceFlowers(Puzzle.Symbol symbol, int amount)
+        {
+            int petals = Puzzle.CountFlowerPetals(symbol);
+            List<Puzzle.Coord> spots = new();
+
+            foreach (Puzzle.Coord pos in _puzzle.OpenTiles)
+            {
+                if (CountAdjacentMatchingTiles(pos) == petals)
+                {
+                    spots.Add(pos);
+                }
+            }
+
+            if (spots.Count < amount)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < amount; i++)
+            {
+                Puzzle.Coord pos = spots[Randomizer.Instance?.Rng?.Next(spots.Count) ?? 0];
+                _puzzle.SetSymbol(pos.x, pos.y, symbol, Puzzle.Color.Black);
+                spots.Remove(pos);
+            }
+
+            return true;
+        }
+
+        private bool PlaceWildcardFlowers(int amount)
+        {
+            while (amount > 0)
+            {
+                if (_puzzle.OpenTiles.Count == 0)
+                {
+                    return false;
+                }
+
+                Puzzle.Coord pos = _puzzle.OpenTiles[Randomizer.Instance?.Rng?.Next(_puzzle.OpenTiles.Count) ?? 0];
+                int matching = CountAdjacentMatchingTiles(pos);
+                _puzzle.SetSymbol(pos.x, pos.y, Puzzle.GetFlowerWithPetals(matching), Puzzle.Color.Black);
+                amount--;
+            }
+
+            return true;
         }
 
         private bool PlaceDiamonds(Puzzle.Color color, int amount)
