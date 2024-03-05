@@ -73,6 +73,87 @@ namespace TaijiRandomizer
             return (symbol == Symbol.ZeroPetals || symbol == Symbol.OnePetal || symbol == Symbol.TwoPetals || symbol == Symbol.ThreePetals || symbol == Symbol.FourPetals);
         }
 
+        public static Symbol GetDiceWithPips(int pips)
+        {
+            switch (pips)
+            {
+                case 1: return Symbol.OnePip;
+                case 2: return Symbol.TwoPips;
+                case 3: return Symbol.ThreePips;
+                case 4: return Symbol.FourPips;
+                case 5: return Symbol.FivePips;
+                case 6: return Symbol.SixPips;
+                case 7: return Symbol.SevenPips;
+                case 8: return Symbol.EightPips;
+                case 9: return Symbol.NinePips;
+                case -1: return Symbol.OneAntiPip;
+                case -2: return Symbol.TwoAntiPips;
+                case -3: return Symbol.ThreeAntiPips;
+                case -4: return Symbol.FourAntiPips;
+                case -5: return Symbol.FiveAntiPips;
+                case -6: return Symbol.SixAntiPips;
+                case -7: return Symbol.SevenAntiPips;
+                case -8: return Symbol.EightAntiPips;
+                case -9: return Symbol.NineAntiPips;
+                default: return Symbol.None;
+            }
+        }
+
+        public static int CountDicePips(Symbol symbol)
+        {
+            switch (symbol)
+            {
+                case Symbol.OnePip: return 1;
+                case Symbol.TwoPips: return 2;
+                case Symbol.ThreePips: return 3;
+                case Symbol.FourPips: return 4;
+                case Symbol.FivePips: return 5;
+                case Symbol.SixPips: return 6;
+                case Symbol.SevenPips: return 7;
+                case Symbol.EightPips: return 8;
+                case Symbol.NinePips: return 9;
+                case Symbol.Dice: return 0;
+                case Symbol.OneAntiPip: return -1;
+                case Symbol.TwoAntiPips: return -2;
+                case Symbol.ThreeAntiPips: return -3;
+                case Symbol.FourAntiPips: return -4;
+                case Symbol.FiveAntiPips: return -5;
+                case Symbol.SixAntiPips: return -6;
+                case Symbol.SevenAntiPips: return -7;
+                case Symbol.EightAntiPips: return -8;
+                case Symbol.NineAntiPips: return -9;
+                case Symbol.AntiDice: return -10;
+                default: return 0;
+            }
+        }
+
+        public static bool IsDice(Symbol symbol)
+        {
+            switch (symbol)
+            {
+                case Symbol.OnePip:
+                case Symbol.TwoPips:
+                case Symbol.ThreePips:
+                case Symbol.FourPips:
+                case Symbol.FivePips:
+                case Symbol.SixPips:
+                case Symbol.SevenPips:
+                case Symbol.EightPips:
+                case Symbol.NinePips:
+                case Symbol.OneAntiPip:
+                case Symbol.TwoAntiPips:
+                case Symbol.ThreeAntiPips:
+                case Symbol.FourAntiPips:
+                case Symbol.FiveAntiPips:
+                case Symbol.SixAntiPips:
+                case Symbol.SevenAntiPips:
+                case Symbol.EightAntiPips:
+                case Symbol.NineAntiPips:
+                    return true;
+                default: return false;
+            }
+        }
+
         public enum Color
         {
             Black = 0,

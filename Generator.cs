@@ -1,10 +1,4 @@
-﻿using Il2CppSystem;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static TaijiRandomizer.Puzzle;
+﻿using System.Runtime.CompilerServices;
 
 namespace TaijiRandomizer
 {
@@ -15,6 +9,8 @@ namespace TaijiRandomizer
         private readonly Puzzle _puzzle = new();
 
         private readonly List<(Puzzle.Symbol symbol, Puzzle.Color color, int amount)> _symbols = new();
+
+        private readonly Dictionary<Puzzle.Color, List<int>> _dice = new();
 
         private readonly Dictionary<int, int> _flowers = new();
         private int _wildcardFlowers = 0;
@@ -31,7 +27,22 @@ namespace TaijiRandomizer
 
         public void Add(Puzzle.Symbol symbol, Puzzle.Color color, int amount)
         {
-            _symbols.Add((symbol, color, amount));
+            if (Puzzle.IsDice(symbol) || symbol == Puzzle.Symbol.Dice || symbol == Puzzle.Symbol.AntiDice)
+            {
+                if (!_dice.ContainsKey(color))
+                {
+                    _dice[color] = new();
+                }
+
+                for (int i = 0; i < amount; i++)
+                {
+                    _dice[color].Add(Puzzle.CountDicePips(symbol));
+                }
+            }
+            else
+            {
+                _symbols.Add((symbol, color, amount));
+            }
         }
 
         public void SetFlowers(int petals, int amount)
@@ -42,7 +53,7 @@ namespace TaijiRandomizer
             }
             else
             {
-                throw new System.ArgumentOutOfRangeException("Petal number out of range");
+                throw new System.ArgumentOutOfRangeException("petals");
             }
         }
 
@@ -110,6 +121,15 @@ namespace TaijiRandomizer
                     {
                         _puzzle.SetSolution(x, y, true);
                     }
+                }
+            }
+
+            // Place any requested dice symbols.
+            if (_dice.Count > 0)
+            {
+                if (!PlaceDice())
+                {
+                    return false;
                 }
             }
 
@@ -205,6 +225,26 @@ namespace TaijiRandomizer
             return result;
         }
 
+        private List<List<Puzzle.Coord>> GetAllOpenRegions()
+        {
+            List<List<Puzzle.Coord>> result = new();
+
+            List<Puzzle.Coord> search = new(_puzzle.OpenTiles);
+
+            while (search.Count > 0)
+            {
+                List<Puzzle.Coord> region = GetRegion(search[0]);
+                foreach (Puzzle.Coord pos in region)
+                {
+                    search.Remove(pos);
+                }
+
+                result.Add(region);
+            }
+
+            return result;
+        }
+
         private int CountColor(List<Puzzle.Coord> tiles, Puzzle.Color color)
         {
             int result = 0;
@@ -256,6 +296,230 @@ namespace TaijiRandomizer
             }
 
             return result;
+        }
+
+        private bool PlaceDice()
+        {
+            // Gotta do a deep copy.
+            Dictionary<Puzzle.Color, List<int>> dice = new();
+            foreach (var mapping in _dice)
+            {
+                dice[mapping.Key] = new(mapping.Value);
+            }
+
+            List<(int pips, Puzzle.Color color)> items = new();
+            Dictionary<Puzzle.Color, bool> colorHasAntis = new();
+            foreach (Puzzle.Color color in dice.Keys)
+            {
+                colorHasAntis[color] = false;
+            }
+            foreach (var mapping in dice)
+            {
+                foreach (int item in mapping.Value)
+                {
+                    items.Add((item, mapping.Key));
+
+                    if (item < 0)
+                    {
+                        colorHasAntis[mapping.Key] = true;
+                    }
+                }
+            }
+
+            items.Sort(new Comparison<(int pips, Puzzle.Color)>((i1, i2) => i2.pips.CompareTo(i1.pips)));
+
+            List<List<Puzzle.Coord>> regions = GetAllOpenRegions().OrderBy(_ => Randomizer.Instance?.Rng?.Next()).ToList();
+
+            while (items.Count > 0)
+            {
+                if (regions.Count == 0)
+                {
+                    // No more regions left to fill.
+                    return false;
+                }
+
+                var item = items[0];
+
+                if (item.pips < 0)
+                {
+                    // We ran out of dice but still have anti-dice remaining.
+                    return false;
+                }
+
+                List<int> set = new(dice[item.color]);
+                set.Remove(item.pips);
+
+                int? placed = null;
+                for (int regionIndex = 0; regionIndex < regions.Count; regionIndex++)
+                {
+                    var region = regions[regionIndex];
+
+                    if (item.pips > region.Count && !colorHasAntis[item.color])
+                    {
+                        // Short-circuit out of this region if the die is too big and we have no antis.
+                        continue;
+                    }
+
+                    List<Puzzle.Coord> openTiles = new();
+                    foreach (Puzzle.Coord pos in region)
+                    {
+                        if (_puzzle.GetSymbol(pos.x, pos.y) == Puzzle.Symbol.None)
+                        {
+                            openTiles.Add(pos);
+                        }
+                    }
+
+                    List<List<int>> options = new();
+
+                    if (region.Count == item.pips && !colorHasAntis[item.color])
+                    {
+                        options.Add(new(item.pips));
+                    }
+                    else
+                    {
+                        // Brute force the subset sum problem. The sets are likely pretty small so it should be okay.
+                        int powerSetCount = 1 << set.Count;
+                        for (int setMask = 0; setMask < powerSetCount; setMask++)
+                        {
+                            int subsetSum = 0;
+                            int symbolCount = 1;
+                            int wildcards = 0;
+                            int antiWildcards = 0;
+
+                            for (int i = 0; i < set.Count; i++)
+                            {
+                                if ((setMask & (1 << i)) > 0)
+                                {
+                                    symbolCount++;
+
+                                    if (set[i] == 0)
+                                    {
+                                        wildcards++;
+                                    }
+                                    else if (set[i] == -10)
+                                    {
+                                        antiWildcards++;
+                                    }
+                                    else
+                                    {
+                                        subsetSum += set[i];
+                                    }
+                                }
+                            }
+
+                            if (symbolCount > openTiles.Count)
+                            {
+                                continue;
+                            }
+
+                            if (item.pips == 0)
+                            {
+                                wildcards++;
+                            }
+
+                            int goal = region.Count - item.pips;
+                            int lowerBound = subsetSum - antiWildcards * 9 + wildcards * 2;
+                            int upperBound = subsetSum + wildcards * 9 - antiWildcards * 2;
+
+                            if (goal >= lowerBound && goal <= upperBound)
+                            {
+                                List<int> choices = new();
+                                for (int i = 0; i < set.Count; i++)
+                                {
+                                    if ((setMask & (1 << i)) > 0)
+                                    {
+                                        choices.Add(set[i]);
+                                    }
+                                }
+
+                                options.Add(choices);
+                            }
+                        }
+                    }
+
+                    if (options.Count > 0)
+                    {
+                        List<int> chosen = options[Randomizer.Instance?.Rng?.Next(options.Count) ?? 0];
+                        chosen.Add(item.pips);
+
+                        int wildcards = 0;
+                        int antiWildcards = 0;
+                        int areaSum = 0;
+                        List<int> finalDice = new();
+                        foreach (int pips in chosen)
+                        {
+                            items.Remove((pips, item.color));
+                            dice[item.color].Remove(pips);
+
+                            if (pips == 0)
+                            {
+                                wildcards++;
+                            }
+                            else if (pips == -10)
+                            {
+                                antiWildcards++;
+                            }
+                            else
+                            {
+                                areaSum += pips;
+                                finalDice.Add(pips);
+                            }
+                        }
+
+                        if (wildcards > 0 || antiWildcards > 0)
+                        {
+                            int difference = region.Count - areaSum;
+                            for (int i = 0; i < wildcards; i++)
+                            {
+                                int lowerBound = Math.Clamp(difference - antiWildcards * 9 + (wildcards - i - 1), 1, 9);
+                                int upperBound = Math.Clamp(difference - antiWildcards + (wildcards - i - 1) * 9, 1, 9);
+
+                                int rolled = Randomizer.Instance?.Rng?.Next(lowerBound, upperBound + 1) ?? lowerBound;
+                                difference -= rolled;
+                                finalDice.Add(rolled);
+                            }
+
+                            for (int i = 0; i < antiWildcards; i++)
+                            {
+                                int lowerBound = Math.Clamp(difference - (antiWildcards - i - 1) * 9, -9, -1);
+                                int upperBound = Math.Clamp(difference - (antiWildcards - i - 1), -9, -1);
+
+                                int rolled = Randomizer.Instance?.Rng?.Next(lowerBound, upperBound + 1) ?? lowerBound;
+                                difference -= rolled;
+                                finalDice.Add(rolled);
+                            }
+
+                            if (difference != 0)
+                            {
+                                // Something went wrong.
+                                return false;
+                            }
+                        }
+
+                        foreach (int pips in finalDice)
+                        {
+                            Puzzle.Coord pos = openTiles[Randomizer.Instance?.Rng?.Next(openTiles.Count) ?? 0];
+                            _puzzle.SetSymbol(pos.x, pos.y, Puzzle.GetDiceWithPips(pips), item.color);
+                            openTiles.Remove(pos);
+                        }
+
+                        placed = regionIndex;
+                        break;
+                    }
+                }
+
+                if (placed == null)
+                {
+                    // Could not assign the symbol to a region.
+                    return false;
+                }
+                else
+                {
+                    regions.RemoveAt(placed ?? 0);
+                }
+            }
+
+            return true;
         }
 
         private bool PlaceFlowers()
