@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using static TaijiRandomizer.Canvas;
 
 namespace TaijiRandomizer
 {
@@ -9,6 +9,8 @@ namespace TaijiRandomizer
         private readonly Puzzle _puzzle = new();
 
         private readonly List<(Puzzle.Symbol symbol, Puzzle.Color color, int amount)> _symbols = new();
+
+        private readonly Dictionary<Puzzle.Color, int> _shapes = new();
 
         private readonly Dictionary<Puzzle.Color, List<int>> _dice = new();
 
@@ -38,6 +40,10 @@ namespace TaijiRandomizer
                 {
                     _dice[color].Add(Puzzle.CountDicePips(symbol));
                 }
+            }
+            else if (symbol == Puzzle.Symbol.Bar)
+            {
+                _shapes[color] = amount;
             }
             else
             {
@@ -107,21 +113,18 @@ namespace TaijiRandomizer
                 _puzzle.SetSolution(tile.x, tile.y, tile.lit);
             }
 
-            // Create a random solution.
-            for (int y = 0; y < _puzzle.Height; y++)
+            // If there are shapes in this puzzle, we have to be strategic with the solution we create.
+            // Otherwise, we can just generate a random solution.
+            if (_shapes.Count > 0)
             {
-                for (int x = 0; x < _puzzle.Width; x++)
+                if (!PlaceShapes())
                 {
-                    if (_puzzle.IsDisabled(x, y) || _puzzle.IsLocked(x, y))
-                    {
-                        continue;
-                    }
-
-                    if (Randomizer.Instance?.Rng?.Next(2) == 0)
-                    {
-                        _puzzle.SetSolution(x, y, true);
-                    }
+                    return false;
                 }
+            }
+            else
+            {
+                GenerateRandomSolution();
             }
 
             // Place any requested dice symbols.
@@ -187,6 +190,26 @@ namespace TaijiRandomizer
             }
 
             return true;
+        }
+
+        private void GenerateRandomSolution()
+        {
+            // Create a random solution.
+            for (int y = 0; y < _puzzle.Height; y++)
+            {
+                for (int x = 0; x < _puzzle.Width; x++)
+                {
+                    if (_puzzle.IsDisabled(x, y) || _puzzle.IsLocked(x, y))
+                    {
+                        continue;
+                    }
+
+                    if (Randomizer.Instance?.Rng?.Next(2) == 0)
+                    {
+                        _puzzle.SetSolution(x, y, true);
+                    }
+                }
+            }
         }
 
         private List<Puzzle.Coord> GetRegion(Puzzle.Coord pos)
@@ -296,6 +319,90 @@ namespace TaijiRandomizer
             }
 
             return result;
+        }
+
+        private bool PlaceShapes()
+        {
+            Canvas canvas = new(_puzzle);
+
+            foreach ((Puzzle.Color color, int bars) in _shapes)
+            {
+                // TODO: Ensure different colors don't have the same shape.
+                Shape shape = new();
+                shape.Generate(canvas.Width, canvas.Height, 1, 10);
+
+                for (int i = 0; i < bars; i++)
+                {
+                    // TODO: Canvas could do this, as well as cache untouched choices.
+                    List<(int x, int y, Canvas.Decision decision)> choices = new();
+                    for (int cy = 0; cy <= canvas.Height - shape.Height + 2; cy++)
+                    {
+                        for (int cx = 0; cx <= canvas.Width - shape.Width + 2; cx++)
+                        {
+                            Canvas.Decision decision = canvas.CanPlaceShape(cx, cy, shape);
+                            if (decision == Canvas.Decision.No)
+                            {
+                                continue;
+                            }
+
+                            choices.Add(new(cx, cy, decision));
+                        }
+                    }
+
+                    if (choices.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    var choice = choices[Randomizer.Instance?.Rng?.Next(choices.Count) ?? 0];
+                    bool on = false;
+                    if (choice.decision == Canvas.Decision.YesOn)
+                    {
+                        on = true;
+                    }
+                    else if (choice.decision == Canvas.Decision.YesEither && (Randomizer.Instance?.Rng?.Next(2) == 0))
+                    {
+                        on = true;
+                    }
+
+                    if (shape.Pivot == null)
+                    {
+                        List<Puzzle.Coord> openTiles = canvas.GetOpenCellsInShape(choice.x, choice.y, shape);
+                        if (openTiles.Count == 0)
+                        {
+                            // TODO: Try another choice rather than quitting.
+                            return false;
+                        }
+
+                        shape.Pivot = openTiles[Randomizer.Instance?.Rng?.Next(openTiles.Count) ?? 0];
+                    }
+
+                    canvas.PlaceShape(choice.x, choice.y, shape, on);
+
+                    _puzzle.SetSymbol((shape.Pivot?.x ?? 0) - 1 + choice.x, (shape.Pivot?.y ?? 0) - 1 + choice.y, Puzzle.Symbol.Bar, color);
+                }
+            }
+
+            for (int y = 0; y < canvas.Height; y++)
+            {
+                for (int x = 0; x < canvas.Width; x++)
+                {
+                    Canvas.CellType canvasCell = canvas.GetCell(x, y);
+                    if (canvasCell == CellType.Undecided)
+                    {
+                        if (Randomizer.Instance?.Rng?.Next(2) == 0)
+                        {
+                            _puzzle.SetSolution(x, y, true);
+                        }
+                    }
+                    else if (canvasCell == CellType.On)
+                    {
+                        _puzzle.SetSolution(x, y, true);
+                    }
+                }
+            }
+
+            return true;
         }
 
         private bool PlaceDice()

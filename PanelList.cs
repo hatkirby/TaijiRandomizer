@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TaijiRandomizer
+﻿namespace TaijiRandomizer
 {
     internal class PanelList
     {
@@ -52,6 +46,17 @@ namespace TaijiRandomizer
             generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
             generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 2);
             generator.SetLocks(7);
+            generator.Generate();
+
+
+
+
+            generator = new(468);
+            generator.Add(Puzzle.Symbol.Bar, Puzzle.Color.Black, 3);
+            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Black, 3);
+            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 2);
+            generator.SetWildcardFlowers(1);
+            generator.SetLocks(4);
             generator.Generate();
 
 

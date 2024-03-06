@@ -316,6 +316,8 @@ namespace TaijiRandomizer
                 // Only do this when not loading from a save.
                 panel.currentState[i] = _tiles[i].lit;
             }
+
+            panel.ReBuild();
         }
 
         public Symbol GetSymbol(int x, int y)
