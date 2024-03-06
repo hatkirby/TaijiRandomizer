@@ -170,7 +170,7 @@
                 for (int sx = 0; sx < shape.Width; sx++)
                 {
                     int cx = x - 1 + sx;
-                    if (cx < 0 || cx > _width)
+                    if (cx < 0 || cx >= _width)
                     {
                         continue;
                     }
