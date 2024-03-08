@@ -70,6 +70,43 @@
             generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 16);
             generator.SetLocks(4);
             generator.Generate();
+
+
+
+            GenerateTutorial();
+        }
+
+        private static void GenerateTutorial()
+        {
+            TutorialGenerator tutorialGenerator;
+
+            // We are leaving the first puzzle vanilla for now because of the alt solution.
+
+            // Second floating island.
+            tutorialGenerator = new(415, 0, 0, "3rdIsland/GraphicsRoot/StartingArea_HintPillarBase (1)", (float)-0.5, 1);
+            tutorialGenerator.Generate();
+
+            // Third floating island.
+            tutorialGenerator = new(419, 1, 1, "4thIsland/NewGraphicsRoot/StartingArea_HintPillarBase (2)", (float)-0.5, 1);
+            tutorialGenerator.Generate();
+
+            // Fourth floating island.
+            tutorialGenerator = new(428, 2, 3, "5thIsland/NewGraphicsRoot/StartingArea_HintPillarBase (3)", (float)-0.5, 1);
+            tutorialGenerator.Generate();
+
+            // First mainland.
+            tutorialGenerator = new(380, 4, 5, "Mainland/GraphicsRoot/StartingArea_HintPillarBase (4)", (float)-1.5, 1);
+            tutorialGenerator.Generate();
+
+            // Second mainland.
+            tutorialGenerator = new(381, 5, 6, "Mainland/GraphicsRoot/StartingArea_HintPillarBase (11)", (float)-1.5, 1);
+            tutorialGenerator.Generate();
+
+            // Optional mainland.
+            tutorialGenerator = new(397, 8, 9, "Mainland/GraphicsRoot/StartingArea_HintPillarBase (7)", (float)-1, 1);
+            tutorialGenerator.Generate();
+
+            // TODO: The final four.
         }
     }
 }

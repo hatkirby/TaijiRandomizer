@@ -27,6 +27,13 @@ namespace TaijiRandomizer
             get { return _rng; }
         }
 
+        private GameObject? _templateWhiteBlock = null;
+        private GameObject? _templateBlackBlock = null;
+
+        public GameObject? TemplateWhiteBlock { get { return _templateWhiteBlock; } }
+
+        public GameObject? TemplateBlackBlock { get { return _templateBlackBlock; } }
+
         [HarmonyPatch(typeof(PuzzlePanelStartTile), "ToggleTile")]
         static class ToggleTilePatch
         {
@@ -118,6 +125,14 @@ namespace TaijiRandomizer
 
             _rng = new Random(seed);
 
+            // Create template blocks for the tutorial-style puzzles.
+            _templateWhiteBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (20)"));
+            _templateWhiteBlock.active = false;
+
+            _templateBlackBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (25)"));
+            _templateBlackBlock.active = false;
+
+            // Generate some puzzles.
             Puzzle hello = new();
             hello.Load(46);
             hello.SetSymbol(0, 0, Puzzle.Symbol.OnePetal, Puzzle.Color.Black);

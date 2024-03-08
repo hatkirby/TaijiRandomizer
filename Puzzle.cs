@@ -320,6 +320,16 @@ namespace TaijiRandomizer
             panel.ReBuild();
         }
 
+        public void WriteSolution(uint id)
+        {
+            PuzzlePanel panel = SaveSystem.PanelIDtoPanelMap[id];
+
+            for (int i = 0; i < _width * _height; i++)
+            {
+                panel.fixedSolution[i] = _tiles[i].solution;
+            }
+        }
+
         public Symbol GetSymbol(int x, int y)
         {
             return _tiles[x + y * _width].symbol;

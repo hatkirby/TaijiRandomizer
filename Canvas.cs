@@ -37,6 +37,11 @@
             return _cells[x + y * _width].type;
         }
 
+        public void SetCell(int x, int y, CellType cellType)
+        {
+            _cells[x + y * _width].type = cellType;
+        }
+
         public Canvas(Puzzle puzzle)
         {
             _width = puzzle.Width;
