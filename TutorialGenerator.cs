@@ -10,6 +10,7 @@ namespace TaijiRandomizer
         private readonly string _path;
         private readonly float _firstX;
         private readonly float _firstY;
+        private readonly List<(int x, int y, bool on, bool locked)> _locked;
 
         private readonly Puzzle _puzzle = new();
 
@@ -23,7 +24,18 @@ namespace TaijiRandomizer
             _path = path;
             _firstX = firstX;
             _firstY = firstY;
+            _locked = new();
             _puzzle.Load(_id);
+        }
+
+        public void ForceCell(int x, int y, bool on)
+        {
+            _locked.Add(new() { x = x, y = y, on = on, locked = false });
+        }
+
+        public void LockCell(int x, int y, bool on)
+        {
+            _locked.Add(new() { x = x, y = y, on = on, locked = true });
         }
 
         public void Generate()
@@ -101,6 +113,18 @@ namespace TaijiRandomizer
                     {
                         _canvas.SetCell(x, y, Canvas.CellType.Off);
                     }
+                }
+            }
+
+            // Place any locked cells.
+            foreach (var locked in _locked)
+            {
+                _puzzle.SetSolution(locked.x, locked.y, locked.on);
+                _canvas.SetCell(locked.x, locked.y, locked.on ? Canvas.CellType.On : Canvas.CellType.Off);
+
+                if (locked.locked)
+                {
+                    _puzzle.LockTile(locked.x, locked.y);
                 }
             }
 
