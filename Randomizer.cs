@@ -1,7 +1,11 @@
 ﻿using HarmonyLib;
 using Il2Cpp;
+using Il2CppInterop.Runtime;
+using Il2CppTMPro;
 using MelonLoader;
-using System.Text;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using Random = System.Random;
 
 namespace TaijiRandomizer
 {
@@ -37,12 +41,74 @@ namespace TaijiRandomizer
             }
         }
 
+        [HarmonyPatch(typeof(PauseMenu), "InitializeMenus")]
+        static class InitializeMenuPatch
+        {
+            public static PauseMenu? pauseMenu = null;
+
+            public static PauseMenu.MenuItem CreateMenuItem(string text)
+            {
+                GameObject menuDisableGroup = pauseMenu.menuDisableGroup;
+                Transform transform = menuDisableGroup.transform;
+
+                GameObject originalOption = GameObject.Find("PauseMenuOption");
+                GameObject menuObject = GameObject.Instantiate(originalOption);
+                menuObject.transform.parent = transform;
+
+                PauseMenu.MenuItem menuItem = new()
+                {
+                    obj = menuObject,
+                    locString = "MENU_OFF",
+                    type = PauseMenu.WidgetType.subMenu,
+                    text = menuObject.GetComponent<TextMeshPro>(),
+                    func = null,
+                    belowMenu = null,
+                    hidden = false
+                };
+
+                menuItem.text.m_HorizontalAlignment = HorizontalAlignmentOptions.Right;
+                menuItem.text.m_VerticalAlignment = VerticalAlignmentOptions.Middle;
+                menuItem.text.m_havePropertiesChanged = true;
+                menuItem.text.SetVerticesDirty();
+                menuItem.text.SetText(text);
+                menuItem.text.color = Constants.WHITECLEAR_COLOR;
+
+                return menuItem;
+            }
+
+            public static PauseMenu.MenuItem CreateActionMenuItem(string text, Action action)
+            {
+                PauseMenu.MenuItem menuItem = CreateMenuItem(text);
+                menuItem.func = DelegateSupport.ConvertDelegate<PauseMenu.menuFunctionDelegate>(action);
+
+                return menuItem;
+            }
+
+            public static void Postfix(PauseMenu __instance)
+            {
+                pauseMenu = __instance;
+
+                __instance.mainMenu.items.Add(CreateActionMenuItem("randomizer", new Action(() => Instance?.OnRandomizerMenuOpened(pauseMenu))));
+            }
+        }
+
+        public void OnRandomizerMenuOpened(PauseMenu pauseMenu)
+        {
+            GeneratePuzzles();
+            pauseMenu.ResumeGame();
+        }
+
         public override void OnInitializeMelon()
         {
             _instance = this;
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
+        {
+            GeneratePuzzles();
+        }
+
+        public void GeneratePuzzles()
         {
             LoggerInstance.Msg("Start generation...");
 
@@ -76,6 +142,8 @@ namespace TaijiRandomizer
             gen97.Generate();
 
             PanelList.Generate();
+
+            Scene currentScene = SceneManager.GetSceneByName("hi");
 
             LoggerInstance.Msg("Done!");
         }
