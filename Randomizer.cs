@@ -37,14 +37,12 @@ namespace TaijiRandomizer
         [HarmonyPatch(typeof(PuzzlePanelStartTile), "ToggleTile")]
         static class ToggleTilePatch
         {
-            public static bool Prefix(PuzzlePanelStartTile __instance)
+            public static void Prefix(PuzzlePanelStartTile __instance)
             {
                 if (Randomizer.Instance != null)
                 {
                     Randomizer.Instance?.LoggerInstance.Msg($"Panel {__instance.panelToControl.id} is {__instance.panelToControl.width}x{__instance.panelToControl.height}");
                 }
-
-                return true;
             }
         }
 
@@ -117,6 +115,8 @@ namespace TaijiRandomizer
 
         public void GeneratePuzzles()
         {
+            SaveSystem.GenerateInstanceMap();
+
             LoggerInstance.Msg("Start generation...");
 
             Random seedRng = new();
@@ -158,7 +158,7 @@ namespace TaijiRandomizer
 
             PanelList.Generate();
 
-            Scene currentScene = SceneManager.GetSceneByName("hi");
+            // Scene currentScene = SceneManager.GetSceneByName("hi");
 
             LoggerInstance.Msg("Done!");
         }

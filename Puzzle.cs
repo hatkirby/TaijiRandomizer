@@ -310,14 +310,17 @@ namespace TaijiRandomizer
             {
                 panel.symbols[i] = (int)_tiles[i].symbol;
                 panel.symbolColors[i] = (short)_tiles[i].color;
-                panel.lockedTiles[i] = _tiles[i].locked;
+                panel.SetLockedTile(i % _width, i / _width, _tiles[i].locked);
                 panel.startingState[i] = _tiles[i].lit;
 
                 // Only do this when not loading from a save.
                 panel.currentState[i] = _tiles[i].lit;
             }
 
-            panel.ReBuild();
+            if (panel.enabled)
+            {
+                panel.ReBuild();
+            }
         }
 
         public void WriteSolution(uint id)
