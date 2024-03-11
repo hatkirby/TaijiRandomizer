@@ -219,6 +219,7 @@ namespace TaijiRandomizer
         // Row major, left to right, bottom to top
         private int _width = 0;
         private int _height = 0;
+        private PuzzlePanel.PanelTypes _panelType = PuzzlePanel.PanelTypes.Freeform;
         private readonly List<Tile> _tiles = new();
         private readonly List<Coord> _open = new();
 
@@ -230,6 +231,11 @@ namespace TaijiRandomizer
         public int Height
         {
             get { return _height; }
+        }
+
+        public PuzzlePanel.PanelTypes PanelType
+        {
+            get { return _panelType; }
         }
 
         public IImmutableList<Coord> OpenTiles
@@ -301,6 +307,8 @@ namespace TaijiRandomizer
                     _open.Add(new(i % _width, i / _width));
                 }
             }
+
+            _panelType = panel.PanelType;
         }
 
         public void Save(uint id)

@@ -46,6 +46,21 @@ namespace TaijiRandomizer
             }
         }
 
+        [HarmonyPatch(typeof(PuzzlePanel), "stepOn")]
+        static class SolvePuzzlePatch
+        {
+            private static HashSet<uint> _checked = new();
+
+            public static void Prefix(PuzzlePanel __instance)
+            {
+                if (Randomizer.Instance != null && !_checked.Contains(__instance.id))
+                {
+                    Randomizer.Instance?.LoggerInstance.Msg($"Panel {__instance.id} is {__instance.width}x{__instance.height}");
+                    _checked.Add(__instance.id);
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(PauseMenu), "InitializeMenus")]
         static class InitializeMenuPatch
         {

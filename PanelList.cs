@@ -73,6 +73,14 @@
 
 
 
+            generator = new(61);
+            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
+            generator.SetWildcardFlowers(2);
+            generator.Generate();
+
+
+
+
             GenerateTutorial();
         }
 

@@ -21,6 +21,31 @@ namespace TaijiRandomizer
         private readonly List<(int x, int y, Puzzle.Symbol symbol, Puzzle.Color color)> _forced = new();
         private readonly List<(int x, int y, bool lit)> _locked = new();
 
+        private int _minPathLength = -1;
+        private int _maxPathLength = -1;
+        private bool _singleStartPoint = true;
+
+        public int MinPathLength
+        {
+            get { return _minPathLength; }
+
+            set { _minPathLength = value; }
+        }
+
+        public int MaxPathLength
+        {
+            get { return _maxPathLength; }
+
+            set { _maxPathLength = value; }
+        }
+
+        public bool SingleStartPoint
+        {
+            get { return _singleStartPoint; }
+
+            set { _singleStartPoint = value; }
+        }
+
         public Generator(uint id)
         {
             _id = id;
@@ -113,18 +138,34 @@ namespace TaijiRandomizer
                 _puzzle.SetSolution(tile.x, tile.y, tile.lit);
             }
 
-            // If there are shapes in this puzzle, we have to be strategic with the solution we create.
-            // Otherwise, we can just generate a random solution.
-            if (_shapes.Count > 0)
+            // If this is a snake puzzle, the solution has to be inputable as a snake.
+            if (_puzzle.PanelType == Il2Cpp.PuzzlePanel.PanelTypes.Snake)
             {
-                if (!PlaceShapes())
+                if (_shapes.Count > 0)
                 {
-                    return false;
+                    // TODO: Handle snake puzzles with shapes.
+                } else
+                {
+                    if (!GenerateRandomSnakeSolution())
+                    {
+                        return false;
+                    }
                 }
-            }
-            else
+            } else
             {
-                GenerateRandomSolution();
+                // If there are shapes in this puzzle, we have to be strategic with the solution we create.
+                // Otherwise, we can just generate a random solution.
+                if (_shapes.Count > 0)
+                {
+                    if (!PlaceShapes())
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    GenerateRandomSolution();
+                }
             }
 
             // Place any requested dice symbols.
@@ -210,6 +251,78 @@ namespace TaijiRandomizer
                     }
                 }
             }
+        }
+
+        private bool GenerateRandomSnakeSolution()
+        {
+            int minLength = _minPathLength == -1 ? (_puzzle.Width * _puzzle.Height / 2) : _minPathLength;
+            int maxLength = _maxPathLength == -1 ? (_puzzle.Width * _puzzle.Height) : _maxPathLength;
+
+            List<Puzzle.Coord> path = new()
+            {
+                new(Randomizer.Instance?.Rng?.Next(_puzzle.Width) ?? 0, Randomizer.Instance?.Rng?.Next(_puzzle.Height) ?? 0)
+            };
+
+            while (path.Count < maxLength)
+            {
+                Puzzle.Coord curCoord = path[path.Count - 1];
+
+                List<Puzzle.Coord> adjacent = new()
+                {
+                    new(curCoord.x-1, curCoord.y),
+                    new(curCoord.x+1, curCoord.y),
+                    new(curCoord.x, curCoord.y-1),
+                    new(curCoord.x, curCoord.y+1)
+                };
+
+                List<Puzzle.Coord> possible = new();
+                foreach (Puzzle.Coord coord in adjacent)
+                {
+                    if (coord.x >= 0 && coord.x < _puzzle.Width && coord.y >= 0 && coord.y < _puzzle.Height && !_puzzle.IsDisabled(coord.x, coord.y) && !path.Contains(coord))
+                    {
+                        possible.Add(coord);
+                    }
+                }
+
+                if (possible.Count == 0)
+                {
+                    return false;
+                }
+
+                Puzzle.Coord nextCoord = possible[Randomizer.Instance?.Rng?.Next(possible.Count) ?? 0];
+                path.Add(nextCoord);
+
+                if (path.Count >= minLength && Randomizer.Instance?.Rng?.Next(3) == 0)
+                {
+                    break;
+                }
+            }
+
+            if (path.Count < minLength)
+            {
+                return false;
+            }
+
+            foreach (Puzzle.Coord coord in path)
+            {
+                _puzzle.SetSolution(coord.x, coord.y, true);
+            }
+
+            if (_singleStartPoint)
+            {
+                for (int y=0; y<_puzzle.Height; y++)
+                {
+                    for (int x=0; x<_puzzle.Width; x++)
+                    {
+                        if (!(path[0].x == x && path[0].y == y))
+                        {
+                            _puzzle.LockTile(x, y, false);
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
 
         private List<Puzzle.Coord> GetRegion(Puzzle.Coord pos)
