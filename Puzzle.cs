@@ -1,5 +1,6 @@
 ﻿using Il2Cpp;
 using System.Collections.Immutable;
+using UnityEngine;
 
 namespace TaijiRandomizer
 {
@@ -317,9 +318,11 @@ namespace TaijiRandomizer
                 panel.currentState[i] = _tiles[i].lit;
             }
 
-            if (panel.enabled)
+            if (panel.transform.childCount > 1)
             {
-                panel.ReBuild();
+                GameObject.Destroy(panel.transform.FindChild("Main Sorting Group").gameObject);
+                GameObject.Destroy(panel.transform.FindChild("Symbols Sorting Group").gameObject);
+                panel.isInitialized = false;
             }
         }
 
