@@ -20,6 +20,11 @@ namespace TaijiRandomizer
             get { return _instance; }
         }
 
+        public static int RandomInt(int max)
+        {
+            return Instance?.Rng?.Next(max) ?? 0;
+        }
+
         private Random? _rng = null;
 
         public Random? Rng
@@ -191,10 +196,10 @@ namespace TaijiRandomizer
 
 
 
-            Generator gen3000 = new(3000);
-            gen3000.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
-            gen3000.SetWildcardFlowers(4);
-            gen3000.Generate();
+            //Generator gen3000 = new(3000);
+            //gen3000.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
+            //gen3000.SetWildcardFlowers(4);
+            //gen3000.Generate();
 
             
 
@@ -211,20 +216,18 @@ namespace TaijiRandomizer
             hello.SetSymbol(3, 3, Puzzle.Symbol.Diamond, Puzzle.Color.Black);
             hello.Save(46);
 
-            Generator gen97 = new(97);
-            gen97.SetLocks(6);
-            gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Black, 3);
-            gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
-            gen97.SetFlowers(2, 1);
-            gen97.SetFlowers(4, 1);
-            gen97.SetFlowers(0, 1);
-            gen97.SetWildcardFlowers(1);
+            //Generator gen97 = new(97);
+            //gen97.SetLocks(6);
+            //gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Black, 3);
+            //gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
+            //gen97.SetFlowers(2, 1);
+            //gen97.SetFlowers(4, 1);
+            //gen97.SetFlowers(0, 1);
+            //gen97.SetWildcardFlowers(1);
             //gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 1);
             //gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.PetalPurple, 1);
-            gen97.Add(Puzzle.Symbol.Dice, Puzzle.Color.Black, 2);
-            gen97.Generate();
-
-
+            //gen97.Add(Puzzle.Symbol.Dice, Puzzle.Color.Black, 2);
+            //gen97.Generate();
 
             PanelList.Generate();
 

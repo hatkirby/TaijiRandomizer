@@ -203,6 +203,9 @@ namespace TaijiRandomizer
             {
                 return HashCode.Combine(x, y);
             }
+
+            public static Coord operator +(Coord a, Coord b) => new(a.x + b.x, a.y + b.y);
+
         }
 
         class Tile
@@ -407,7 +410,7 @@ namespace TaijiRandomizer
                 for (int i = 0; i < _width * _height; i++)
                 {
                     panel.SetLockedTile(i % _width, i / _width, _tiles[i].locked);
-                }
+        }
             }
         }
 
@@ -463,18 +466,44 @@ namespace TaijiRandomizer
 
         public void LockTile(int x, int y, bool lit)
         {
-            _tiles[x + y * _width].locked = true;
-            _tiles[x + y * _width].lit = lit;
+            LockTile(x + y * _width, lit);
         }
 
         public void LockTile(int x, int y)
         {
-            LockTile(x, y, _tiles[x + y * _width].solution);
+            LockTile(x + y * _width, _tiles[x + y * _width].solution);
+        }
+
+        public void LockTile(int i)
+        {
+            LockTile(i, _tiles[i].solution);
+        }
+
+        public void LockTile(int i, bool lit)
+        {
+            _tiles[i].locked = true;
+            _tiles[i].lit = lit;
+        }
+
+        public void UnlockTile(int x, int y)
+        {
+            UnlockTile(x + y * _width);
+        }
+
+        public void UnlockTile(int i)
+        {
+            _tiles[i].locked = false;
+            _tiles[i].lit = false;
         }
 
         public bool IsInSolution(int x, int y)
         {
             return _tiles[x + y * _width].solution;
+        }
+
+        public void SetLit(int x, int y, bool val)
+        {
+            _tiles[x + y * _width].lit = val;
         }
 
         public void SetSolution(int x, int y, bool val)

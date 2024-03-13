@@ -6,7 +6,7 @@ namespace TaijiRandomizer
     {
         private readonly uint _id;
 
-        private readonly Puzzle _puzzle = new();
+        private Puzzle _puzzle = new();
 
         private readonly List<(Puzzle.Symbol symbol, Puzzle.Color color, int amount)> _symbols = new();
 
@@ -111,9 +111,37 @@ namespace TaijiRandomizer
             _locks = val;
         }
 
-        public void Generate()
+        public void Generate(bool useSolver = true)
         {
-            while (!GenerateHelper())
+            if (useSolver)
+            {
+                int maxLocks = (_puzzle.Width * _puzzle.Height) / Solver.Instance.maxLocksProportion;
+                Puzzle bestPuzzle = new();
+                List<List<bool>> solutions = new();
+                int bestLocks = int.MaxValue;
+                for (int i = 0; i < Solver.Instance.minAttempts || bestLocks > maxLocks; i++)
+                {
+                    _puzzle = new();
+                    _puzzle.Load(_id);
+                    while (!GenerateHelper())
+                    {
+                        // Try again.
+                    }
+                    Solver.Instance.SolveAndLockTiles(_puzzle);
+                    List<int> locks = (from n in Enumerable.Range(0, _puzzle.Width * _puzzle.Height)
+                         where _puzzle.IsLocked(n % _puzzle.Width, n / _puzzle.Width) select n).ToList();
+                    if (locks.Count < bestLocks)
+                    {
+                        bestLocks = locks.Count;
+                        bestPuzzle = _puzzle;
+                        solutions = Solver.Instance.solutions;
+                    }
+                }
+                _puzzle = bestPuzzle;
+                Solver.Instance.solutions = solutions;
+                Solver.Instance.CleanupLocks(_puzzle);
+            }
+            else while (!GenerateHelper())
             {
                 // Try again.
             }
@@ -165,7 +193,7 @@ namespace TaijiRandomizer
                 else
                 {
                     GenerateRandomSolution();
-                }
+            }
             }
 
             // Place any requested dice symbols.
@@ -319,7 +347,7 @@ namespace TaijiRandomizer
                             _puzzle.LockTile(x, y, false);
                         }
                     }
-                }
+            }
             }
 
             return true;
@@ -790,6 +818,10 @@ namespace TaijiRandomizer
 
                 Puzzle.Coord pos = _puzzle.OpenTiles[Randomizer.Instance?.Rng?.Next(_puzzle.OpenTiles.Count) ?? 0];
                 int matching = CountAdjacentMatchingTiles(pos);
+                if (matching == 0 && Randomizer.RandomInt(3) > 0)
+                {
+                    continue;
+                }
                 _puzzle.SetSymbol(pos.x, pos.y, Puzzle.GetFlowerWithPetals(matching), Puzzle.Color.Black);
                 amount--;
             }

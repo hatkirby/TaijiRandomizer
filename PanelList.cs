@@ -1,89 +1,172 @@
-﻿namespace TaijiRandomizer
+﻿using static TaijiRandomizer.Puzzle.Symbol;
+using static TaijiRandomizer.Puzzle.Color;
+
+namespace TaijiRandomizer
 {
-    internal class PanelList
-    {
-        public static void Generate()
-        {
-            Generator generator = new(26);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Teal, 2);
-            generator.Generate();
-
-            generator = new(255);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Teal, 2);
-            generator.SetLocks(3);
-            generator.Generate();
-
-            generator = new(107);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Teal, 4);
-            generator.SetLocks(2);
-            generator.Generate();
-
-            generator = new(81);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Teal, 4);
-            generator.SetLocks(2);
-            generator.Generate();
-
-            generator = new(59);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 6);
-            generator.SetLocks(2);
-            generator.Generate();
-
-            generator = new(62);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 6);
-            generator.Generate();
-
-            generator = new(253);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 6);
-            generator.SetLocks(3);
-            generator.Generate();
-
-            generator = new(347);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 8);
-            generator.Generate();
-
-            generator = new(110);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Black, 10);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 2);
-            generator.SetLocks(7);
-            generator.Generate();
-
-
-
-
-            generator = new(468);
-            generator.Add(Puzzle.Symbol.Bar, Puzzle.Color.Black, 3);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Black, 3);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 2);
-            generator.SetWildcardFlowers(1);
-            generator.SetLocks(4);
-            generator.Generate();
-
-
-            // These two are broken.
-            generator = new(19);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 16);
-            generator.SetLocks(4);
-            generator.Generate();
-
-            generator = new(128);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.Gold, 16);
-            generator.SetLocks(4);
-            generator.Generate();
-
-
-
-            generator = new(61);
-            generator.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
-            generator.SetWildcardFlowers(2);
-            generator.Generate();
-
-
-
-
+    internal class PanelList {
+        public static void Generate() {
             GenerateTutorial();
+            GenerateMines();
+            GenerateGardens();
         }
 
+        public static void Generate_Test()
+        {
+            
+        }
+
+        public static void GenerateMines()
+        {
+            Generator generator;
+            //Tutorial (1x2)
+            //Entry Set 1 (3x3)
+            generator = new(26);
+            generator.Add(Diamond, Teal, 4);
+            generator.Generate();
+            generator = new(255);
+            generator.Add(Diamond, Teal, 4);
+            generator.Generate();
+            //generator = new(87);
+            //generator.Add(Diamond, Teal, 4);
+            //generator.Generate();
+            generator = new(107);
+            generator.Add(Diamond, Teal, 6);
+            generator.Generate();
+            generator = new(81);
+            generator.Add(Diamond, Teal, 6);
+            generator.Generate();
+            //Entry Set 2 (4x4)
+            //generator = new(59);
+            //generator.Add(Diamond, Gold, 6);
+            //generator.Generate();
+            generator = new(62);
+            generator.Add(Diamond, Gold, 8);
+            generator.Generate();
+            generator = new(253);
+            generator.Add(Diamond, Gold, 8);
+            generator.Generate();
+            generator = new(224);
+            generator.Add(Diamond, Gold, 10);
+            generator.Generate();
+            generator = new(347);
+            generator.Add(Diamond, Gold, 10);
+            generator.Generate();
+            //Boat (3x4)
+            //Left Set 1 (4x4)
+            generator = new(5);
+            generator.Add(Diamond, Gold, 10);
+            generator.Generate();
+            generator = new(17);
+            generator.Add(Diamond, Gold, 12);
+            generator.Generate();
+            generator = new(73);
+            generator.Add(Diamond, Gold, 12);
+            generator.Generate();
+            //Left Set 2 (5x5) Don't generate properly?
+            generator = new(19);
+            generator.Add(Diamond, Gold, 14);
+            generator.Generate();
+            generator = new(128);
+            generator.Add(Diamond, Gold, 14);
+            generator.Generate();
+            //Left Shortcut (5x4)
+            generator = new(76);
+            generator.Add(Diamond, Gold, 12);
+            generator.Generate();
+            //Right Set 1 (3x3)
+            generator = new(29);
+            generator.Add(Diamond, Gold, 2);
+            generator.Add(Diamond, Teal, 2);
+            generator.Add(Diamond, Black, 2);
+            generator.Generate();
+            generator = new(116);
+            generator.Add(Diamond, Gold, 4);
+            generator.Add(Diamond, Teal, 2);
+            generator.Generate();
+            generator = new(448);
+            generator.Add(Diamond, Gold, 4);
+            generator.Add(Diamond, Teal, 4);
+            generator.Generate();
+            generator = new(458);
+            generator.Add(Diamond, Gold, 6);
+            generator.Add(Diamond, Teal, 2);
+            generator.Generate();
+            generator = new(209);
+            generator.Add(Diamond, Gold, 4);
+            generator.Add(Diamond, Teal, 2);
+            generator.Add(Diamond, Black, 2);
+            generator.Generate();
+            //Right Set 2 (4x4)
+            generator = new(411);
+            generator.Add(Diamond, Gold, 6);
+            generator.Add(Diamond, Black, 4);
+            generator.Generate();
+            generator = new(98);
+            generator.Add(Diamond, Gold, 6);
+            generator.Add(Diamond, Black, 6);
+            generator.Generate();
+            generator = new(63);
+            generator.Add(Diamond, Gold, 8);
+            generator.Add(Diamond, Black, 6);
+            generator.Generate();
+            //Right Set 3 (5x5) Nerf to 5x4?
+            generator = new(140);
+            generator.Add(Diamond, Gold, 6);
+            generator.Add(Diamond, Black, 6);
+            generator.Add(Diamond, Blue, 6);
+            generator.Generate();
+            generator = new(21);
+            generator.Add(Diamond, Gold, 8);
+            generator.Add(Diamond, Black, 8);
+            generator.Add(Diamond, Blue, 6);
+            generator.Generate();
+            //Right Shortcut
+            generator = new(462);
+            generator.Add(Diamond, White, 6);
+            generator.Add(Diamond, Gold, 4);
+            generator.Add(Diamond, Purple, 4);
+            generator.Generate();
+            //Snake Set
+            //Snake Shortcut
+            //Final Puzzle
+            //Dice Mixin Elevator (3x3)
+            //Dice Mixin F1 Entry (5x5)
+            //Dice Mixin Set 1 (4x4)
+            //Dice Mixin Set 2 (4x4)
+            //Dice Mixin F3 Entry (4x4)
+            //River
+        }
+
+        public static void GenerateGardens()
+        {
+            Generator generator;
+            //Flowers Tutorial 1 (3x3)
+            //Flowers Tutorial 2 (3x3)
+            //Flowers Set 1 (3x3)
+            //Flowers Set 2 (4x4)
+            generator = new(233);
+            generator.SetWildcardFlowers(4);
+            generator.Generate();
+            generator = new(100);
+            generator.SetWildcardFlowers(5);
+            generator.Generate();
+            generator = new(531);
+            generator.SetWildcardFlowers(6);
+            generator.Generate();
+            generator = new(526);
+            generator.SetWildcardFlowers(8);
+            generator.Generate();
+            generator = new(538);
+            generator.SetWildcardFlowers(10);
+            generator.Generate();
+            //Flowers + Snake (5x5)
+            //Shortcut to Hub (6x3)
+            generator = new(66);
+            generator.SetWildcardFlowers(10);
+            generator.Generate();
+            //Shortcut to Orchard (4x4)
+
+        }
         private static void GenerateTutorial()
         {
             TutorialGenerator tutorialGenerator;
@@ -122,9 +205,9 @@
             List<uint> orderedIds = tutorialEndIds.OrderBy(_ => Randomizer.Instance?.Rng?.Next()).ToList();
 
             List<Puzzle.Coord> coords = new();
-            for (int y=0;y<3;y++)
+            for (int y = 0; y < 3; y++)
             {
-                for (int x=0;x<3;x++)
+                for (int x = 0; x < 3; x++)
                 {
                     coords.Add(new(x, y));
                 }
@@ -155,11 +238,11 @@
             orderedGenerators[0].LockCell(coord1.x, coord1.y, cell1);
             orderedGenerators[0].LockCell(coord2.x, coord2.y, !cell2);
             orderedGenerators[0].Generate();
-            
+
             orderedGenerators[1].LockCell(coord2.x, coord2.y, cell2);
             orderedGenerators[1].LockCell(coord3.x, coord3.y, !cell3);
             orderedGenerators[1].Generate();
-            
+
             orderedGenerators[2].LockCell(coord3.x, coord3.y, cell3);
             orderedGenerators[2].LockCell(coord4.x, coord4.y, !cell4);
             orderedGenerators[2].Generate();
