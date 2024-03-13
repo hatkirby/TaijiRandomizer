@@ -370,7 +370,6 @@ namespace TaijiRandomizer
             {
                 panel.symbols[i] = (int)_tiles[i].symbol;
                 panel.symbolColors[i] = (short)_tiles[i].color;
-                panel.SetLockedTile(i % _width, i / _width, _tiles[i].locked);
                 panel.startingState[i] = _tiles[i].lit;
 
                 // Only do this when not loading from a save.
@@ -381,6 +380,34 @@ namespace TaijiRandomizer
             {
                 GameObject.Destroy(panel.transform.GetChild(i).gameObject);
                 panel.isInitialized = false;
+            }
+
+            if (panel.is_snake_panel)
+            {
+                for (int i = 0; i < _width * _height; i++)
+                {
+                    panel.lockedTiles[i] = true;
+                }
+            }
+
+            Randomizer.Instance?.SetPuzzlePanelInitializer(id, this.FinishInitializing);
+        }
+
+        private void FinishInitializing(PuzzlePanel panel)
+        {
+            if (panel.is_snake_panel)
+            {
+                for (int i = 0; i < _width * _height; i++)
+                {
+                    panel.lockedTiles[i] = _tiles[i].locked;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < _width * _height; i++)
+                {
+                    panel.SetLockedTile(i % _width, i / _width, _tiles[i].locked);
+                }
             }
         }
 

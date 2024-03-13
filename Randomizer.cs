@@ -34,6 +34,29 @@ namespace TaijiRandomizer
 
         public GameObject? TemplateBlackBlock { get { return _templateBlackBlock; } }
 
+        internal delegate void PuzzlePanelInitializer(PuzzlePanel panel);
+
+        private Dictionary<uint, PuzzlePanelInitializer> _puzzlePanelInitializers = new();
+
+        internal void SetPuzzlePanelInitializer(uint id, PuzzlePanelInitializer initializer)
+        {
+            _puzzlePanelInitializers[id] = initializer;
+        }
+
+        [HarmonyPatch(typeof(PuzzlePanel), nameof(PuzzlePanel.Update))]
+        static class UpdatePanelPatch
+        {
+            public static void Postfix(PuzzlePanel __instance)
+            {
+                // Here we can run a handler right after a puzzle has been properly initialized.
+                if (__instance.isInitialized && _instance != null && _instance._puzzlePanelInitializers.ContainsKey(__instance.id))
+                {
+                    _instance._puzzlePanelInitializers[__instance.id](__instance);
+                    _instance._puzzlePanelInitializers.Remove(__instance.id);
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(PuzzlePanelStartTile), "ToggleTile")]
         static class ToggleTilePatch
         {
