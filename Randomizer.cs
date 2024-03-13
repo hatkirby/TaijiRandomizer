@@ -123,6 +123,19 @@ namespace TaijiRandomizer
             _instance = this;
         }
 
+        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+        {
+            SaveSystem.GenerateInstanceMap();
+
+            GameObject.Find("AreaRoot_BonusPuzzles/GraphicsRoot/BonusArea_FadeGroup/PuzzlePanel (234)").active = false;
+
+            GameObject basedOn = GameObject.Find("AreaRoot_BonusPuzzles/GraphicsRoot/BonusArea_FadeGroup/PuzzlePanel (232)");
+            Vector3 v3 = basedOn.transform.position;
+            v3.y = 29.53F;
+
+            Puzzle.Instantiate(3000, PuzzlePanel.PanelTypes.Snake, v3, 3, 4);
+        }
+
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
             GeneratePuzzles();
@@ -130,7 +143,12 @@ namespace TaijiRandomizer
 
         public void GeneratePuzzles()
         {
-            SaveSystem.GenerateInstanceMap();
+            
+            
+            
+
+
+            
 
             LoggerInstance.Msg("Start generation...");
 
@@ -146,6 +164,18 @@ namespace TaijiRandomizer
 
             _templateBlackBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (25)"));
             _templateBlackBlock.active = false;
+
+
+
+
+            Generator gen3000 = new(3000);
+            gen3000.Add(Puzzle.Symbol.Diamond, Puzzle.Color.White, 4);
+            gen3000.SetWildcardFlowers(4);
+            gen3000.Generate();
+
+            
+
+
 
             // Generate some puzzles.
             Puzzle hello = new();
@@ -170,6 +200,8 @@ namespace TaijiRandomizer
             //gen97.Add(Puzzle.Symbol.Diamond, Puzzle.Color.PetalPurple, 1);
             gen97.Add(Puzzle.Symbol.Dice, Puzzle.Color.Black, 2);
             gen97.Generate();
+
+
 
             PanelList.Generate();
 

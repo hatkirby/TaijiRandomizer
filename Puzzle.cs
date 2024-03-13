@@ -1,4 +1,5 @@
 ﻿using Il2Cpp;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using System.Collections.Immutable;
 using UnityEngine;
 
@@ -223,6 +224,50 @@ namespace TaijiRandomizer
         private readonly List<Tile> _tiles = new();
         private readonly List<Coord> _open = new();
 
+        public static Puzzle Instantiate(uint id, PuzzlePanel.PanelTypes panelType, Vector3 position, int width, int height)
+        {
+            GameObject newObject;
+
+            if (panelType == PuzzlePanel.PanelTypes.Snake)
+            {
+                GameObject basedOn = GameObject.Find("AreaRoot_BonusPuzzles/GraphicsRoot/BonusArea_FadeGroup/PuzzlePanel (232)");
+                newObject = GameObject.Instantiate(basedOn);
+                newObject.transform.set_position_Injected(position);
+                newObject.transform.parent = basedOn.transform.parent;
+            }
+            else
+            {
+                // TODO: Find template for freeform puzzles.
+                newObject = new("hi");
+            }
+
+            PuzzlePanel thePanel = newObject.GetComponent<PuzzlePanel>();
+            thePanel.id = id;
+            thePanel.enabled = true;
+            thePanel.width = width;
+            thePanel.height = height;
+
+            PowerSource thePower = newObject.GetComponent<PowerSource>();
+            thePower.fullyPowered = true;
+
+            SaveSystem.PanelIDtoPanelMap[id] = thePanel;
+            SaveSystem.IDtoPanelMap[thePanel.GetInstanceID()] = thePanel;
+
+            Il2CppReferenceArray<PuzzlePanel> newPanels = new(SaveSystem.panels.Count + 1);
+            for (int i = 0; i < SaveSystem.panels.Count; i++)
+            {
+                newPanels[i] = SaveSystem.panels[i];
+            }
+            newPanels[SaveSystem.panels.Count] = thePanel;
+            SaveSystem.panels = newPanels;
+
+            Puzzle result = new();
+            result.Load(id);
+            result.Save(id);
+
+            return result;
+        }
+
         public int Width
         {
             get { return _width; }
@@ -314,6 +359,12 @@ namespace TaijiRandomizer
         public void Save(uint id)
         {
             PuzzlePanel panel = SaveSystem.PanelIDtoPanelMap[id];
+            int itemCount = _width * _height;
+            panel.symbols = new(itemCount);
+            panel.symbolColors = new(itemCount);
+            panel.lockedTiles = new(itemCount);
+            panel.startingState = new(itemCount);
+            panel.currentState = new(itemCount);
 
             for (int i = 0; i < _width * _height; i++)
             {
@@ -326,10 +377,9 @@ namespace TaijiRandomizer
                 panel.currentState[i] = _tiles[i].lit;
             }
 
-            if (panel.transform.childCount > 1)
+            for (int i = 1; i < panel.transform.childCount; i++)
             {
-                GameObject.Destroy(panel.transform.FindChild("Main Sorting Group").gameObject);
-                GameObject.Destroy(panel.transform.FindChild("Symbols Sorting Group").gameObject);
+                GameObject.Destroy(panel.transform.GetChild(i).gameObject);
                 panel.isInitialized = false;
             }
         }
