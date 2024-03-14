@@ -206,15 +206,15 @@ namespace TaijiRandomizer
 
 
             // Generate some puzzles.
-            Puzzle hello = new();
-            hello.Load(46);
-            hello.SetSymbol(0, 0, Puzzle.Symbol.OnePetal, Puzzle.Color.Black);
-            hello.SetSymbol(1, 0, Puzzle.Symbol.Diamond, Puzzle.Color.PetalPurple);
-            hello.SetSymbol(3, 0, Puzzle.Symbol.OnePip, Puzzle.Color.Gray);
-            hello.SetSymbol(1, 2, Puzzle.Symbol.Diamond, Puzzle.Color.Black);
-            hello.SetSymbol(0, 3, Puzzle.Symbol.OneAntiPip, Puzzle.Color.Gray);
-            hello.SetSymbol(3, 3, Puzzle.Symbol.Diamond, Puzzle.Color.Black);
-            hello.Save(46);
+            //Puzzle hello = new();
+            //hello.Load(46);
+            //hello.SetSymbol(0, 0, Puzzle.Symbol.OnePetal, Puzzle.Color.Black);
+            //hello.SetSymbol(1, 0, Puzzle.Symbol.Diamond, Puzzle.Color.PetalPurple);
+            //hello.SetSymbol(3, 0, Puzzle.Symbol.OnePip, Puzzle.Color.Gray);
+            //hello.SetSymbol(1, 2, Puzzle.Symbol.Diamond, Puzzle.Color.Black);
+            //hello.SetSymbol(0, 3, Puzzle.Symbol.OneAntiPip, Puzzle.Color.Gray);
+            //hello.SetSymbol(3, 3, Puzzle.Symbol.Diamond, Puzzle.Color.Black);
+            //hello.Save(46);
 
             //Generator gen97 = new(97);
             //gen97.SetLocks(6);

@@ -296,6 +296,7 @@ namespace TaijiRandomizer
             _width = width;
             _height = height;
             _tiles.Clear();
+            _open.Clear();
 
             for (int i = 0; i < _width * _height; i++)
             {

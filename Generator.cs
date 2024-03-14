@@ -135,6 +135,10 @@ namespace TaijiRandomizer
                 {
                     _puzzle = new();
                     _puzzle.Load(_id);
+                    if (_width + _height > 0)
+                    {
+                        _puzzle.SetSize(_width, _height);
+                    }
                     while (!GenerateHelper())
                     {
                         // Try again.
