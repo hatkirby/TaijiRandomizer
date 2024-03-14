@@ -100,14 +100,14 @@ namespace TaijiRandomizer
         static class InitializeMenuPatch
         {
             public static PauseMenu? pauseMenu = null;
+            public static PauseMenu.SubMenu randomizerMenu = new();
 
             public static PauseMenu.MenuItem CreateMenuItem(string text)
             {
                 GameObject menuDisableGroup = pauseMenu.menuDisableGroup;
                 Transform transform = menuDisableGroup.transform;
 
-                GameObject originalOption = GameObject.Find("PauseMenuOption");
-                GameObject menuObject = GameObject.Instantiate(originalOption);
+                GameObject menuObject = GameObject.Instantiate(pauseMenu.optionPrefab);
                 menuObject.transform.parent = transform;
 
                 PauseMenu.MenuItem menuItem = new()
@@ -139,11 +139,35 @@ namespace TaijiRandomizer
                 return menuItem;
             }
 
+            public static PauseMenu.MenuItem CreateSubMenuItem(string text, PauseMenu.SubMenu subMenu)
+            {
+                PauseMenu.MenuItem menuItem = CreateMenuItem(text);
+                menuItem.belowMenu = subMenu;
+                menuItem.func = DelegateSupport.ConvertDelegate<PauseMenu.menuFunctionDelegate>(pauseMenu.GoToBelowMenu);
+
+                return menuItem;
+            }
+
+            public static PauseMenu.MenuItem CreateReturnMenuItem()
+            {
+                PauseMenu.MenuItem menuItem = CreateMenuItem("<<<");
+                menuItem.func = DelegateSupport.ConvertDelegate<PauseMenu.menuFunctionDelegate>(pauseMenu.GoToAboveMenu);
+
+                return menuItem;
+            }
+
             public static void Postfix(PauseMenu __instance)
             {
                 pauseMenu = __instance;
+                pauseMenu.menus.Add(randomizerMenu);
 
-                __instance.mainMenu.items.Add(CreateActionMenuItem("randomizer", new Action(() => Instance?.OnRandomizerMenuOpened(pauseMenu))));
+                __instance.mainMenu.items.Insert(3, CreateSubMenuItem("randomizer", randomizerMenu));
+
+                randomizerMenu.depth = 1;
+                randomizerMenu.items.Add(CreateReturnMenuItem());
+#if DEBUG
+                randomizerMenu.items.Add(CreateActionMenuItem("DEBUG: re-randomize", new Action(() => Instance?.OnRandomizerMenuOpened(pauseMenu))));
+#endif       
             }
         }
 
