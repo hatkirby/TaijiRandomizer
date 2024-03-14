@@ -150,7 +150,7 @@ namespace TaijiRandomizer
 
             public static PauseMenu.MenuItem CreateReturnMenuItem()
             {
-                PauseMenu.MenuItem menuItem = CreateMenuItem("<<<");
+                PauseMenu.MenuItem menuItem = CreateMenuItem("<<");
                 menuItem.func = DelegateSupport.ConvertDelegate<PauseMenu.menuFunctionDelegate>(pauseMenu.GoToAboveMenu);
 
                 return menuItem;
