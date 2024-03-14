@@ -49,14 +49,14 @@ namespace TaijiRandomizer
             _puzzle.WriteSolution(_id);
 
             // Deactivate the blocks that are already there.
-            GameObject pillarBase = GameObject.Find(_path);
+            GameObject pillarBase = Randomizer.Instance.LookupGameObject(_path);
             for (int i=0; i < pillarBase.transform.childCount; i++)
             {
                 GameObject child = pillarBase.transform.GetChild(i).gameObject;
 
-                if (child.name.StartsWith("StartingArea_HintBlocks_0"))
+                if (child.name.StartsWith("StartingArea_HintBlocks_0") || child.name.StartsWith("TutorialBlock_"))
                 {
-                    child.active = false;
+                    GameObject.Destroy(child);
                 }
             }
 

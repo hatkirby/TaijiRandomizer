@@ -43,6 +43,18 @@ namespace TaijiRandomizer
             _puzzlePanelInitializers[id] = initializer;
         }
 
+        private Dictionary<string, GameObject> _gameObjectCache = new();
+
+        public GameObject LookupGameObject(string path)
+        {
+            if (!_gameObjectCache.ContainsKey(path))
+            {
+                _gameObjectCache[path] = GameObject.Find(path);
+            }
+
+            return _gameObjectCache[path];
+        }
+
         [HarmonyPatch(typeof(PuzzlePanel), nameof(PuzzlePanel.Update))]
         static class UpdatePanelPatch
         {
@@ -148,6 +160,8 @@ namespace TaijiRandomizer
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
+            _gameObjectCache.Clear();
+
             SaveSystem.GenerateInstanceMap();
 
             GameObject.Find("AreaRoot_BonusPuzzles/GraphicsRoot/BonusArea_FadeGroup/PuzzlePanel (234)").active = false;
@@ -157,6 +171,13 @@ namespace TaijiRandomizer
             v3.y = 29.53F;
 
             Puzzle.Instantiate(3000, PuzzlePanel.PanelTypes.Snake, v3, 3, 4);
+
+            // Create template blocks for the tutorial-style puzzles.
+            _templateWhiteBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (20)"));
+            _templateWhiteBlock.active = false;
+
+            _templateBlackBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (25)"));
+            _templateBlackBlock.active = false;
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -181,12 +202,7 @@ namespace TaijiRandomizer
 
             _rng = new Random(seed);
 
-            // Create template blocks for the tutorial-style puzzles.
-            _templateWhiteBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (20)"));
-            _templateWhiteBlock.active = false;
-
-            _templateBlackBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (25)"));
-            _templateBlackBlock.active = false;
+            
 
 
 
