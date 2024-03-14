@@ -1,5 +1,6 @@
 ﻿using static TaijiRandomizer.Puzzle.Symbol;
 using static TaijiRandomizer.Puzzle.Color;
+using UnityEngine;
 
 namespace TaijiRandomizer
 {
@@ -17,115 +18,46 @@ namespace TaijiRandomizer
 
         public static void GenerateMines()
         {
-            Generator generator;
             //Tutorial (1x2)
-            //Entry Set 1 (3x3)
-            generator = new(26);
-            generator.Add(Diamond, Teal, 4);
-            generator.Generate();
-            generator = new(255);
-            generator.Add(Diamond, Teal, 4);
-            generator.Generate();
-            //generator = new(87);
-            //generator.Add(Diamond, Teal, 4);
-            //generator.Generate();
-            generator = new(107);
-            generator.Add(Diamond, Teal, 6);
-            generator.Generate();
-            generator = new(81);
-            generator.Add(Diamond, Teal, 6);
-            generator.Generate();
+            //Generator.SetSize(3, 3);
+            Generator.Generate(26, Diamond, Teal, 4);
+            Generator.Generate(255, Diamond, Teal, 4);
+            //Generator.Generate(87, Diamond, Teal, 6);
+            Generator.Generate(107, Diamond, Teal, 6);
+            Generator.Generate(81, Diamond, Teal, 6);
             //Entry Set 2 (4x4)
-            //generator = new(59);
-            //generator.Add(Diamond, Gold, 6);
-            //generator.Generate();
-            generator = new(62);
-            generator.Add(Diamond, Gold, 8);
-            generator.Generate();
-            generator = new(253);
-            generator.Add(Diamond, Gold, 8);
-            generator.Generate();
-            generator = new(224);
-            generator.Add(Diamond, Gold, 10);
-            generator.Generate();
-            generator = new(347);
-            generator.Add(Diamond, Gold, 10);
-            generator.Generate();
+            //Generator.SetSize(4, 3);
+            //Generator.Generate(59, Diamond, Gold, 6);
+            Generator.Generate(62, Diamond, Gold, 8);
+            //Generator.SetSize(4, 4);
+            Generator.Generate(253, Diamond, Gold, 8);
+            Generator.Generate(224, Diamond, Gold, 10);
+            Generator.Generate(347, Diamond, Gold, 10);
             //Boat (3x4)
             //Left Set 1 (4x4)
-            generator = new(5);
-            generator.Add(Diamond, Gold, 10);
-            generator.Generate();
-            generator = new(17);
-            generator.Add(Diamond, Gold, 12);
-            generator.Generate();
-            generator = new(73);
-            generator.Add(Diamond, Gold, 12);
-            generator.Generate();
-            //Left Set 2 (5x5) Don't generate properly?
-            generator = new(19);
-            generator.Add(Diamond, Gold, 14);
-            generator.Generate();
-            generator = new(128);
-            generator.Add(Diamond, Gold, 14);
-            generator.Generate();
+            Generator.Generate(5, Diamond, Gold, 10);
+            Generator.Generate(17, Diamond, Gold, 12);
+            Generator.Generate(73, Diamond, Gold, 12);
+            //Left Set 2 (5x5)
+            Generator.Generate(19, Diamond, Gold, 14);
+            Generator.Generate(128, Diamond, Gold, 14);
             //Left Shortcut (5x4)
-            generator = new(76);
-            generator.Add(Diamond, Gold, 12);
-            generator.Generate();
+            Generator.Generate(76, Diamond, Gold, 12);
             //Right Set 1 (3x3)
-            generator = new(29);
-            generator.Add(Diamond, Gold, 2);
-            generator.Add(Diamond, Teal, 2);
-            generator.Add(Diamond, Black, 2);
-            generator.Generate();
-            generator = new(116);
-            generator.Add(Diamond, Gold, 4);
-            generator.Add(Diamond, Teal, 2);
-            generator.Generate();
-            generator = new(448);
-            generator.Add(Diamond, Gold, 4);
-            generator.Add(Diamond, Teal, 4);
-            generator.Generate();
-            generator = new(458);
-            generator.Add(Diamond, Gold, 6);
-            generator.Add(Diamond, Teal, 2);
-            generator.Generate();
-            generator = new(209);
-            generator.Add(Diamond, Gold, 4);
-            generator.Add(Diamond, Teal, 2);
-            generator.Add(Diamond, Black, 2);
-            generator.Generate();
+            Generator.Generate(29, Diamond, Gold, 2, Diamond, Teal, 2, Diamond, Black, 2);
+            Generator.Generate(116, Diamond, Gold, 4, Diamond, Teal, 2);
+            Generator.Generate(448, Diamond, Gold, 4, Diamond, Teal, 4);
+            Generator.Generate(458, Diamond, Gold, 6, Diamond, Teal, 2);
+            Generator.Generate(209, Diamond, Gold, 4, Diamond, Teal, 2, Diamond, Black, 2);
             //Right Set 2 (4x4)
-            generator = new(411);
-            generator.Add(Diamond, Gold, 6);
-            generator.Add(Diamond, Black, 4);
-            generator.Generate();
-            generator = new(98);
-            generator.Add(Diamond, Gold, 6);
-            generator.Add(Diamond, Black, 6);
-            generator.Generate();
-            generator = new(63);
-            generator.Add(Diamond, Gold, 8);
-            generator.Add(Diamond, Black, 6);
-            generator.Generate();
+            Generator.Generate(411, Diamond, Gold, 6, Diamond, Black, 4);
+            Generator.Generate(98, Diamond, Gold, 6, Diamond, Black, 6);
+            Generator.Generate(63, Diamond, Gold, 8, Diamond, Black, 4);
             //Right Set 3 (5x5) Nerf to 5x4?
-            generator = new(140);
-            generator.Add(Diamond, Gold, 6);
-            generator.Add(Diamond, Black, 6);
-            generator.Add(Diamond, Blue, 6);
-            generator.Generate();
-            generator = new(21);
-            generator.Add(Diamond, Gold, 8);
-            generator.Add(Diamond, Black, 8);
-            generator.Add(Diamond, Blue, 6);
-            generator.Generate();
+            Generator.Generate(140, Diamond, Gold, 6, Diamond, Black, 6, Diamond, Blue, 6);
+            Generator.Generate(21, Diamond, Gold, 8, Diamond, Black, 8, Diamond, Blue, 6);
             //Right Shortcut
-            generator = new(462);
-            generator.Add(Diamond, White, 6);
-            generator.Add(Diamond, Gold, 4);
-            generator.Add(Diamond, Purple, 4);
-            generator.Generate();
+            Generator.Generate(462, Diamond, White, 6, Diamond, Gold, 4, Diamond, Purple, 4);
             //Snake Set
             //Snake Shortcut
             //Final Puzzle
@@ -139,31 +71,18 @@ namespace TaijiRandomizer
 
         public static void GenerateGardens()
         {
-            Generator generator;
             //Flowers Tutorial 1 (3x3)
             //Flowers Tutorial 2 (3x3)
             //Flowers Set 1 (3x3)
             //Flowers Set 2 (4x4)
-            generator = new(233);
-            generator.SetWildcardFlowers(4);
-            generator.Generate();
-            generator = new(100);
-            generator.SetWildcardFlowers(5);
-            generator.Generate();
-            generator = new(531);
-            generator.SetWildcardFlowers(6);
-            generator.Generate();
-            generator = new(526);
-            generator.SetWildcardFlowers(8);
-            generator.Generate();
-            generator = new(538);
-            generator.SetWildcardFlowers(10);
-            generator.Generate();
+            Generator.Generate(233, Flower, Black, 4);
+            Generator.Generate(100, Flower, Black, 5);
+            Generator.Generate(531, Flower, Black, 6);
+            Generator.Generate(526, Flower, Black, 8);
+            Generator.Generate(538, Flower, Black, 10);
             //Flowers + Snake (5x5)
             //Shortcut to Hub (6x3)
-            generator = new(66);
-            generator.SetWildcardFlowers(10);
-            generator.Generate();
+            Generator.Generate(66, Flower, Black, 10);
             //Shortcut to Orchard (4x4)
 
         }

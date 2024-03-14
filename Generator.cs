@@ -46,10 +46,16 @@ namespace TaijiRandomizer
             set { _singleStartPoint = value; }
         }
 
+        private static int _width = 0, _height = 0;
+
         public Generator(uint id)
         {
             _id = id;
             _puzzle.Load(_id);
+            if (_width + _height > 0)
+            {
+                _puzzle.SetSize(_width, _height);
+            }
         }
 
         public void Add(Puzzle.Symbol symbol, Puzzle.Color color, int amount)
@@ -74,6 +80,12 @@ namespace TaijiRandomizer
             {
                 _symbols.Add((symbol, color, amount));
             }
+        }
+
+        public static void SetSize(int width, int height)
+        {
+            _width = width;
+            _height = height;
         }
 
         public void SetFlowers(int petals, int amount)
@@ -890,6 +902,60 @@ namespace TaijiRandomizer
             }
 
             return true;
+        }
+
+        //Convenience functions
+        public static void Generate(uint id, Puzzle.Symbol s1, Puzzle.Color c1, int n1)
+        {
+            (Puzzle.Symbol, Puzzle.Color, int)[] symbols = { (s1, c1, n1) };
+            Generate(id, symbols);
+        }
+        public static void Generate(uint id, Puzzle.Symbol s1, Puzzle.Color c1, int n1,
+              Puzzle.Symbol s2, Puzzle.Color c2, int n2)
+        {
+            (Puzzle.Symbol, Puzzle.Color, int)[] symbols = { (s1, c1, n1), (s2, c2, n2) };
+            Generate(id, symbols);
+        }
+        public static void Generate(uint id, Puzzle.Symbol s1, Puzzle.Color c1, int n1,
+              Puzzle.Symbol s2, Puzzle.Color c2, int n2, Puzzle.Symbol s3, Puzzle.Color c3, int n3)
+        {
+            (Puzzle.Symbol, Puzzle.Color, int)[] symbols = { (s1, c1, n1), (s2, c2, n2), (s3, c3, n3) };
+            Generate(id, symbols);
+        }
+        public static void Generate(uint id, Puzzle.Symbol s1, Puzzle.Color c1, int n1,
+              Puzzle.Symbol s2, Puzzle.Color c2, int n2, Puzzle.Symbol s3, Puzzle.Color c3, int n3,
+              Puzzle.Symbol s4, Puzzle.Color c4, int n4)
+        {
+            (Puzzle.Symbol, Puzzle.Color, int)[] symbols = { (s1, c1, n1), (s2, c2, n2), (s3, c3, n3), (s4, c4, n4) };
+            Generate(id, symbols);
+        }
+        public static void Generate(uint id, Puzzle.Symbol s1, Puzzle.Color c1, int n1,
+              Puzzle.Symbol s2, Puzzle.Color c2, int n2, Puzzle.Symbol s3, Puzzle.Color c3, int n3,
+              Puzzle.Symbol s4, Puzzle.Color c4, int n4, Puzzle.Symbol s5, Puzzle.Color c5, int n5)
+        {
+            (Puzzle.Symbol, Puzzle.Color, int)[] symbols = { (s1, c1, n1), (s2, c2, n2), (s3, c3, n3), (s4, c4, n4), (s5, c5, n5) };
+            Generate(id, symbols);
+        }
+        public static void Generate(uint id, (Puzzle.Symbol, Puzzle.Color, int)[] symbols)
+        {
+            Generator g = new(id);
+            foreach (var t in symbols)
+            {
+                if (t.Item1 == Puzzle.Symbol.Flower)
+                    g.SetWildcardFlowers(t.Item3);
+                else if (t.Item1 == Puzzle.Symbol.ZeroPetals)
+                    g.SetFlowers(0, t.Item3);
+                else if (t.Item1 == Puzzle.Symbol.OnePetal)
+                    g.SetFlowers(1, t.Item3);
+                else if (t.Item1 == Puzzle.Symbol.TwoPetals)
+                    g.SetFlowers(2, t.Item3);
+                else if (t.Item1 == Puzzle.Symbol.ThreePetals)
+                    g.SetFlowers(2, t.Item3);
+                else if (t.Item1 == Puzzle.Symbol.FourPetals)
+                    g.SetFlowers(4, t.Item3);
+                else g.Add(t.Item1, t.Item2, t.Item3);
+            }
+            g.Generate();
         }
     }
 }

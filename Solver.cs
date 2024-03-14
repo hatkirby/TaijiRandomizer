@@ -26,7 +26,7 @@ namespace TaijiRandomizer
 
         public int minAttempts { get; set; } = 5;
         public int maxIterations { get; set; } = 100000000;
-        public int maxQueue { get; set; } = 10000;
+        public int maxQueue { get; set; } = 1000;
         public int maxSolutions { get; set; } = 1;
         public int maxLocksProportion { get; set; } = 1; //1 in X
         public static Solver Instance = new Solver();
@@ -257,7 +257,7 @@ namespace TaijiRandomizer
                     continue;
                 }
                 Puzzle.Symbol symbol = _puzzle.GetSymbol(next.x, next.y);
-                if (Puzzle.IsFlower(symbol) && !CheckFlower(pos))
+                if (Puzzle.IsFlower(symbol) && !CheckFlower(next))
                 {
                     return false;
                 }
@@ -347,39 +347,32 @@ namespace TaijiRandomizer
             int petals = Puzzle.CountFlowerPetals(_puzzle.GetSymbol(pos.x, pos.y));
             int countMatch = 0;
             int countNonMatch = 0;
+            int openSpaces = 4;
             foreach (Puzzle.Coord dir in _directions)
             {
                 Puzzle.Coord next = pos + dir;
                 if (!IsOnGrid(next))
+                {
+                    openSpaces--;
+                    continue;
+                }
+                if (!IsTileSolvedYet(next.x, next.y))
                 {
                     continue;
                 }
                 if (_puzzle.IsInSolution(next.x, next.y) == _puzzle.IsInSolution(pos.x, pos.y))
                 {
                     countMatch++;
-                    if (countMatch > petals)
-                    {
-                        return false;
-                    }
                 }
                 else
                 {
                     countNonMatch++;
-                    if (countNonMatch > 4 - petals)
-                    {
-                        return false;
-                    }
                 }
             }
-            return true;
-        }
-
-        private bool CheckDiamond(Puzzle.Coord pos)
-        {
-            Puzzle.Color color = _puzzle.GetColor(pos.x, pos.y);
-            bool enclosed;
-            List<Puzzle.Coord> region = GetRegion(pos, out enclosed);
-            
+            if (countMatch > petals || countNonMatch > openSpaces - petals)
+            {
+                return false;
+            }
             return true;
         }
     }
