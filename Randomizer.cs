@@ -1,10 +1,15 @@
 ﻿using HarmonyLib;
 using Il2Cpp;
 using Il2CppInterop.Runtime;
+using Il2CppSystem;
 using Il2CppTMPro;
 using MelonLoader;
+using System.ComponentModel;
+using System.Security.Cryptography;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Random = System.Random;
 
 namespace TaijiRandomizer
@@ -34,6 +39,8 @@ namespace TaijiRandomizer
 
         public GameObject? TemplateBlackBlock { get { return _templateBlackBlock; } }
 
+        private GameObject? _templateMenuTextInput = null;
+
         internal delegate void PuzzlePanelInitializer(PuzzlePanel panel);
 
         private Dictionary<uint, PuzzlePanelInitializer> _puzzlePanelInitializers = new();
@@ -54,6 +61,9 @@ namespace TaijiRandomizer
 
             return _gameObjectCache[path];
         }
+
+        private bool _setSeed = false;
+        private int _setSeedValue = 0;
 
         [HarmonyPatch(typeof(PuzzlePanel), nameof(PuzzlePanel.Update))]
         static class UpdatePanelPatch
@@ -100,7 +110,13 @@ namespace TaijiRandomizer
         static class InitializeMenuPatch
         {
             public static PauseMenu? pauseMenu = null;
-            public static PauseMenu.SubMenu randomizerMenu = new();
+            public static PauseMenu.SubMenu randomizerMenu;
+
+            public delegate int GetChoiceFunction();
+            public delegate void SetChoiceFunction(int choice);
+
+            public delegate string GetStringFunction();
+            public delegate void SetStringFunction(string value);
 
             public static PauseMenu.MenuItem CreateMenuItem(string text)
             {
@@ -131,7 +147,7 @@ namespace TaijiRandomizer
                 return menuItem;
             }
 
-            public static PauseMenu.MenuItem CreateActionMenuItem(string text, Action action)
+            public static PauseMenu.MenuItem CreateActionMenuItem(string text, System.Action action)
             {
                 PauseMenu.MenuItem menuItem = CreateMenuItem(text);
                 menuItem.func = DelegateSupport.ConvertDelegate<PauseMenu.menuFunctionDelegate>(action);
@@ -156,8 +172,124 @@ namespace TaijiRandomizer
                 return menuItem;
             }
 
+            public static PauseMenu.MenuItem CreateChoiceMenuItem(string text, List<string> choices, GetChoiceFunction getChoiceFunc, SetChoiceFunction setChoiceFunc)
+            {
+                PauseMenu.SubMenu subMenu = new()
+                {
+                    isBottomMenu = true,
+                    depth = 1,
+                    activeItem = getChoiceFunc()
+                };
+
+                foreach (string choice in choices)
+                {
+                    subMenu.items.Add(CreateActionMenuItem(choice, () =>
+                    {
+                        setChoiceFunc(subMenu.activeItem);
+                        subMenu.activeItem = getChoiceFunc();
+                        pauseMenu.GoToAboveMenu();
+                    }));
+                }
+
+                pauseMenu.menus.Add(subMenu);
+
+                PauseMenu.MenuItem menuItem = CreateSubMenuItem(text, subMenu);
+                menuItem.type = PauseMenu.WidgetType.toggler;
+                menuItem.currentSettingFunc = DelegateSupport.ConvertDelegate<PauseMenu.getCurrentSettingDelegate>(getChoiceFunc);
+
+                return menuItem;
+            }
+
+            public static PauseMenu.MenuItem CreateTextEntryMenuItem(string text, GetStringFunction getStringFunc, SetStringFunction setStringFunc)
+            {
+                GameObject textEntry = new("MenuTextEntry");
+                textEntry.transform.parent = pauseMenu.menuDisableGroup.transform;
+                textEntry.AddComponent<LayoutElement>();
+                RectTransform topTransform = textEntry.GetComponent<RectTransform>();
+                topTransform.anchorMin = Vector2.zero;
+                topTransform.anchorMax = Vector2.one;
+                topTransform.offsetMin = Vector2.zero;
+                topTransform.offsetMax = Vector2.zero;
+
+                GameObject textViewport = new("Text Area");
+                textViewport.transform.parent = textEntry.transform;
+                textViewport.AddComponent<RectMask2D>();
+
+                RectTransform inputTransform = textViewport.GetComponent<RectTransform>();
+                inputTransform.anchorMin = Vector2.zero;
+                inputTransform.anchorMax = Vector2.one;
+                inputTransform.offsetMin = Vector2.zero;
+                inputTransform.offsetMax = Vector2.zero;
+
+                GameObject placeholder = new("Placeholder");
+                placeholder.transform.parent = textViewport.transform;
+
+                TextMeshPro placeholderText = placeholder.AddComponent<TextMeshPro>();
+                placeholderText.text = "seed";
+                placeholderText.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+
+                RectTransform placeholderTransform = placeholder.GetComponent<RectTransform>();
+                placeholderTransform.anchorMin = Vector2.zero;
+                placeholderTransform.anchorMax = Vector2.one;
+                placeholderTransform.offsetMin = Vector2.zero;
+                placeholderTransform.offsetMax = Vector2.zero;
+
+                GameObject textObject = GameObject.Instantiate(pauseMenu.optionPrefab);
+                textObject.name = "Text";
+                textObject.transform.parent = textViewport.transform;
+
+                RectTransform textTransform = textObject.GetComponent<RectTransform>();
+                textTransform.anchorMin = Vector2.zero;
+                textTransform.anchorMax = Vector2.one;
+                textTransform.offsetMin = Vector2.zero;
+                textTransform.offsetMax = Vector2.zero;
+
+                TMP_InputField inputField = textEntry.AddComponent<TMP_InputField>();
+                inputField.interactable = true;
+                inputField.placeholder = placeholderText;
+                inputField.textComponent = textObject.GetComponent<TextMeshPro>();
+                inputField.textViewport = inputTransform;
+                inputField.richText = false;
+                inputField.SetGlobalFontAsset(pauseMenu.optionPrefab.GetComponent<TextMeshPro>().font);
+                inputField.SetGlobalPointSize(0.6F);
+                inputField.SetText(getStringFunc());
+
+                /*PauseMenu.MenuItem subMenuItem = new()
+                {
+                    obj = textObject,
+                    locString = "MENU_OFF",
+                    type = PauseMenu.WidgetType.subMenu,
+                    text = textObject.GetComponent<TextMeshPro>(),
+                    func = null,
+                    belowMenu = null,
+                    hidden = false
+                };
+
+                PauseMenu.SubMenu subMenu = new()
+                {
+                    isBottomMenu = true,
+                    depth = 1
+                };
+                subMenu.items.Add(subMenuItem);
+
+                pauseMenu.menus.Add(subMenu);*/
+
+                PauseMenu.MenuItem menuItem = CreateMenuItem(text);
+                menuItem.widgetObj = textEntry;
+                menuItem.func = DelegateSupport.ConvertDelegate<PauseMenu.menuFunctionDelegate>(new System.Action(() =>
+                {
+                    //pauseMenu.GoToBelowMenu();
+                    //EventSystem.current.SetSelectedGameObject(textEntry, null);
+                    inputField.ActivateInputField();
+                }));
+
+                return menuItem;
+            }
+
             public static void Postfix(PauseMenu __instance)
             {
+                randomizerMenu = new();
+                
                 pauseMenu = __instance;
                 pauseMenu.menus.Add(randomizerMenu);
 
@@ -166,8 +298,20 @@ namespace TaijiRandomizer
                 randomizerMenu.depth = 1;
                 randomizerMenu.items.Add(CreateReturnMenuItem());
 #if DEBUG
-                randomizerMenu.items.Add(CreateActionMenuItem("DEBUG: re-randomize", new Action(() => Instance?.OnRandomizerMenuOpened(pauseMenu))));
-#endif       
+                randomizerMenu.items.Add(CreateActionMenuItem("DEBUG: re-randomize", new System.Action(() => Instance?.OnRandomizerMenuOpened(pauseMenu))));
+#endif
+
+
+                randomizerMenu.items.Add(CreateChoiceMenuItem(
+                    "seed type",
+                    new() { "random seed", "set seed" },
+                    () => Instance._setSeed ? 1 : 0,
+                    (int choice) => Instance._setSeed = (choice == 1)));
+
+                randomizerMenu.items.Add(CreateTextEntryMenuItem("seed number", () => Instance._setSeedValue.ToString(), (string value) =>
+                {
+                    int.TryParse(value, out Instance._setSeedValue);
+                }));
             }
         }
 
@@ -202,6 +346,77 @@ namespace TaijiRandomizer
 
             _templateBlackBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (25)"));
             _templateBlackBlock.active = false;
+
+            // Create a text entry field for the pause menu.
+            /*_templateMenuTextInput = GameObject.Instantiate(GameObject.Find("New Pause Menu").GetComponent<PauseMenu>().optionPrefab);
+            _templateMenuTextInput.name = "MenuTextEntry";
+            _templateMenuTextInput.hideFlags = HideFlags.HideAndDontSave;
+            TMP_InputField inputField = _templateMenuTextInput.AddComponent<TMP_InputField>();
+
+            GameObject textDisplay = new("Display");
+            textDisplay.transform.parent = _templateMenuTextInput.transform;
+
+            GameObject placeholder = new("Placeholder");
+            placeholder.transform.parent = _templateMenuTextInput.transform;
+
+            TextMeshPro placeholderText = placeholder.AddComponent<TextMeshPro>();
+            placeholderText.text = "seed";
+
+            inputField.placeholder = placeholderText;
+            inputField.textComponent = textDisplay.AddComponent<TextMeshPro>();*/
+
+            /*GameObject textEntry = new("MenuTextEntry");
+            //textEntry.transform.parent = pauseMenu.menuDisableGroup.transform;
+            Vector3 textVec = textEntry.transform.localPosition;
+            //textVec.z = -10;
+            textEntry.transform.set_localPosition_Injected(textVec);
+
+            GameObject textViewport = new("Text Area");
+            textViewport.transform.parent = textEntry.transform;
+            textViewport.AddComponent<RectMask2D>();
+
+            RectTransform inputTransform = textViewport.GetComponent<RectTransform>();
+            inputTransform.anchorMin = Vector2.zero;
+            inputTransform.anchorMax = Vector2.one;
+            inputTransform.offsetMin = Vector2.zero;
+            inputTransform.offsetMax = Vector2.zero;
+
+            GameObject placeholder = new("Placeholder");
+            placeholder.transform.parent = textViewport.transform;
+
+            TextMeshPro placeholderText = placeholder.AddComponent<TextMeshPro>();
+            placeholderText.text = "seed";
+            placeholderText.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+
+            RectTransform placeholderTransform = placeholder.GetComponent<RectTransform>();
+            placeholderTransform.anchorMin = Vector2.zero;
+            placeholderTransform.anchorMax = Vector2.one;
+            placeholderTransform.offsetMin = Vector2.zero;
+            placeholderTransform.offsetMax = Vector2.zero;
+
+            GameObject textObject = new("Text");// GameObject.Instantiate(pauseMenu.optionPrefab);
+            //textObject.name = "Text";
+            textObject.transform.parent = textViewport.transform;
+            TextMeshPro hi = textObject.AddComponent<TextMeshPro>();
+            hi.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+
+            RectTransform textTransform = textObject.GetComponent<RectTransform>();
+            textTransform.anchorMin = Vector2.zero;
+            textTransform.anchorMax = Vector2.one;
+            textTransform.offsetMin = Vector2.zero;
+            textTransform.offsetMax = Vector2.zero;
+
+            TMP_InputField inputField = textEntry.AddComponent<TMP_InputField>();
+            inputField.interactable = true;
+            inputField.placeholder = placeholderText;
+            inputField.textComponent = textObject.GetComponent<TextMeshPro>();
+            inputField.textViewport = inputTransform;
+            inputField.richText = false;
+            //inputField.SetGlobalFontAsset(pauseMenu.optionPrefab.GetComponent<TextMeshPro>().font);
+            //inputField.SetGlobalPointSize(0.6F);
+            //inputField.SetText(getStringFunc());
+            inputField.SetText("Goodday");*/
+
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -211,12 +426,12 @@ namespace TaijiRandomizer
 
         public void GeneratePuzzles()
         {
-            
-            
-            
 
 
-            
+
+
+
+
 
             LoggerInstance.Msg("Start generation...");
 
@@ -226,7 +441,7 @@ namespace TaijiRandomizer
 
             _rng = new Random(seed);
 
-            
+
 
 
 
@@ -236,7 +451,7 @@ namespace TaijiRandomizer
             gen3000.SetWildcardFlowers(4);
             gen3000.Generate();
 
-            
+
 
 
 
