@@ -268,6 +268,14 @@ namespace TaijiRandomizer
                         _position++;
                     }
                 }
+
+                if (Keyboard.current.deleteKey.wasPressedThisFrame)
+                {
+                    if (_position < _text.Length)
+                    {
+                        SetText(_text.Remove(_position, 1));
+                    }
+                }
             }
         }
     }
