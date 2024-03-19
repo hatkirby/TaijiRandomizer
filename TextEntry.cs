@@ -160,6 +160,12 @@ namespace TaijiRandomizer
 
                     return;
                 }
+
+                if (Keyboard.current.vKey.wasPressedThisFrame && Keyboard.current.ctrlKey.isPressed)
+                {
+                    SetText(_text.Insert(_position, GUIUtility.systemCopyBuffer));
+                    _position += GUIUtility.systemCopyBuffer.Length;
+                }
             }
         }
     }

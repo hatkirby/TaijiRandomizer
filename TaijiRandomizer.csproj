@@ -45,6 +45,9 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\SteamLibrary\steamapps\common\Taiji\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\SteamLibrary\steamapps\common\Taiji\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\SteamLibrary\steamapps\common\Taiji\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll</HintPath>
     </Reference>
