@@ -33,6 +33,9 @@
     <Reference Include="MelonLoader">
       <HintPath>..\..\SteamLibrary\steamapps\common\Taiji\MelonLoader\net6\MelonLoader.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>..\..\SteamLibrary\steamapps\common\Taiji\MelonLoader\Il2CppAssemblies\Unity.InputSystem.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\..\SteamLibrary\steamapps\common\Taiji\MelonLoader\Il2CppAssemblies\Unity.TextMeshPro.dll</HintPath>
     </Reference>
