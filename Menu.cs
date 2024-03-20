@@ -170,7 +170,7 @@ namespace TaijiRandomizer
                 {
                     setStringFunc(menuInputHandler.Text);
                 }
-                
+
                 menuInputHandler.Text = getStringFunc();
             };
 
@@ -239,6 +239,57 @@ namespace TaijiRandomizer
             randomizerMenu.items.Add(_seedMenuItem);
 
             SetSeed = SetSeed;
+        }
+    }
+
+    [HarmonyPatch(typeof(PauseMenu), nameof(PauseMenu.RefreshLoadGameMenu))]
+    static class LoadGameMenuPatch
+    {
+        public static void Postfix(PauseMenu __instance)
+        {
+            SaveManager.Load();
+
+            for (int i = 0; i < __instance.SaveInfo_Slot[Globals.currentSaveSlot].Count; i++)
+            {
+                PauseMenu.MenuItem menuItem = __instance.loadGameMenu.items[i + 1];
+                Transform labelTransform = menuItem.widgetObj.transform.FindChild("RandomizerInfo");
+                GameObject label;
+
+                if (labelTransform == null)
+                {
+                    label = GameObject.Instantiate(__instance.optionPrefab);
+                    label.name = "RandomizerInfo";
+                    label.transform.parent = menuItem.widgetObj.transform;
+                    label.transform.set_localPosition_Injected(new(0, 0, 2));
+
+                    RectTransform rectTransform = label.GetComponent<RectTransform>();
+                    rectTransform.offsetMin = new(0, 0);
+                    rectTransform.offsetMax = new(0, 0);
+
+                    TextMeshPro textMeshPro = label.GetComponent<TextMeshPro>();
+                    textMeshPro.fontSize = 1.25F;
+                    textMeshPro.outlineWidth = 0.25F;
+                    textMeshPro.horizontalAlignment = HorizontalAlignmentOptions.Center;
+                }
+                else
+                {
+                    label = labelTransform.gameObject;
+                }
+
+                uint saveIndex = __instance.SaveInfo_Slot[Globals.currentSaveSlot][i].saveIndex;
+                if (SaveManager.IsRandomizedFile(Globals.currentSaveSlot, saveIndex))
+                {
+                    SaveManager.SaveInfo saveInfo = SaveManager.GetSaveInfo(Globals.currentSaveSlot, saveIndex);
+                    label.active = true;
+
+                    TextMeshPro textMeshPro = label.GetComponent<TextMeshPro>();
+                    textMeshPro.text = $"Standalone Randomizer\nSeed: {saveInfo.Seed}";
+                }
+                else
+                {
+                    label.active = false;
+                }
+            }
         }
     }
 }

@@ -35,6 +35,16 @@ namespace TaijiRandomizer
             set { _shouldRandomize = value; }
         }
 
+        public struct RandomizedGameInformation
+        {
+            public int seed;
+            public bool set_seed;
+        }
+
+        private RandomizedGameInformation? _currentGame = null;
+
+        public RandomizedGameInformation? CurrentGame => _currentGame;
+
         private GameObject? _templateWhiteBlock = null;
         private GameObject? _templateBlackBlock = null;
 
@@ -170,13 +180,17 @@ namespace TaijiRandomizer
                 Random seedRng = new();
                 seed = seedRng.Next(1, 10000000);
             }
-            
+
             LoggerInstance.Msg($"Seed: {seed}");
 
             _rng = new Random(seed);
 
 
-
+            _currentGame = new()
+            {
+                seed = seed,
+                set_seed = Menu.SetSeed
+            };
 
 
 
