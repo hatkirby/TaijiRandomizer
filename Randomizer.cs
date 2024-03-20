@@ -26,14 +26,21 @@ namespace TaijiRandomizer
             get { return _rng; }
         }
 
+        private bool _shouldRandomize = false;
+
+        public bool ShouldRandomize
+        {
+            get { return _shouldRandomize; }
+
+            set { _shouldRandomize = value; }
+        }
+
         private GameObject? _templateWhiteBlock = null;
         private GameObject? _templateBlackBlock = null;
 
         public GameObject? TemplateWhiteBlock { get { return _templateWhiteBlock; } }
 
         public GameObject? TemplateBlackBlock { get { return _templateBlackBlock; } }
-
-        private GameObject? _templateMenuTextInput = null;
 
         internal delegate void PuzzlePanelInitializer(PuzzlePanel panel);
 
@@ -104,6 +111,11 @@ namespace TaijiRandomizer
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
+            if (!_shouldRandomize)
+            {
+                return;
+            }
+
             _gameObjectCache.Clear();
 
             SaveSystem.GenerateInstanceMap();
@@ -126,6 +138,13 @@ namespace TaijiRandomizer
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
+            if (!_shouldRandomize)
+            {
+                return;
+            }
+
+            SaveSystem.GenerateInstanceMap();
+
             GeneratePuzzles();
         }
 

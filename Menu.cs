@@ -205,6 +205,13 @@ namespace TaijiRandomizer
 
             randomizerMenu.depth = 1;
             randomizerMenu.items.Add(CreateReturnMenuItem());
+            randomizerMenu.items.Add(CreateActionMenuItem("start new game", new System.Action(() =>
+            {
+                Randomizer.Instance.ShouldRandomize = true;
+
+                pauseMenu.StartNewGame();
+            })));
+
 #if DEBUG
             randomizerMenu.items.Add(CreateActionMenuItem("DEBUG: re-randomize", new System.Action(() =>
             {
