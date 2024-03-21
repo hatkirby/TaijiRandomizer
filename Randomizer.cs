@@ -4,6 +4,7 @@ using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using Random = System.Random;
 
 namespace TaijiRandomizer
@@ -35,6 +36,8 @@ namespace TaijiRandomizer
             set { _shouldRandomize = value; }
         }
 
+        private uint? _shouldLoadFile = null;
+
         public struct RandomizedGameInformation
         {
             public int seed;
@@ -44,6 +47,8 @@ namespace TaijiRandomizer
         private RandomizedGameInformation? _currentGame = null;
 
         public RandomizedGameInformation? CurrentGame => _currentGame;
+
+        private RandomizedGameInformation? _intendedGame = null;
 
         private GameObject? _templateWhiteBlock = null;
         private GameObject? _templateBlackBlock = null;
@@ -114,6 +119,60 @@ namespace TaijiRandomizer
             }
         }
 
+        [HarmonyPatch(typeof(SaveSystem), nameof(SaveSystem.Load))]
+        static class LoadPatch
+        {
+            public static void Postfix()
+            {
+                if (Instance == null)
+                {
+                    return;
+                }
+
+                SaveManager.Load();
+
+                bool saveIsRandomized = SaveManager.IsRandomizedFile(Globals.currentSaveSlot, Globals.activeSaveIndex);
+                bool currentIsRandomized = Instance.CurrentGame.HasValue;
+
+                if (saveIsRandomized == currentIsRandomized)
+                {
+                    if (saveIsRandomized)
+                    {
+                        SaveManager.SaveInfo saveInfo = SaveManager.GetSaveInfo(Globals.currentSaveSlot, Globals.activeSaveIndex);
+                        if (saveInfo.Seed == Instance.CurrentGame.Value.seed)
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
+                if (saveIsRandomized)
+                {
+                    SaveManager.SaveInfo saveInfo = SaveManager.GetSaveInfo(Globals.currentSaveSlot, Globals.activeSaveIndex);
+
+                    Instance._shouldRandomize = true;
+                    Instance._intendedGame = new()
+                    {
+                        seed = saveInfo.Seed,
+                        set_seed = false
+                    };
+                }
+                else
+                {
+                    Instance._shouldRandomize = false;
+                }
+
+                Instance._shouldLoadFile = Globals.activeSaveIndex;
+
+                string currentSceneName = SceneManager.GetActiveScene().name;
+                SceneManager.LoadScene(currentSceneName);
+            }
+        }
+
         public override void OnInitializeMelon()
         {
             _instance = this;
@@ -148,14 +207,22 @@ namespace TaijiRandomizer
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
-            if (!_shouldRandomize)
+            if (_shouldRandomize)
             {
-                return;
+                SaveSystem.GenerateInstanceMap();
+
+                GeneratePuzzles();
+            }
+            else
+            {
+                _currentGame = null;
             }
 
-            SaveSystem.GenerateInstanceMap();
-
-            GeneratePuzzles();
+            if (_shouldLoadFile != null)
+            {
+                SaveSystem.Load(0, false, _shouldLoadFile.Value);
+                _shouldLoadFile = null;
+            }
         }
 
         public void GeneratePuzzles()
@@ -171,7 +238,11 @@ namespace TaijiRandomizer
 
             int seed;
 
-            if (Menu.SetSeed)
+            if (_intendedGame != null)
+            {
+                seed = _intendedGame.Value.seed;
+            }
+            else if (Menu.SetSeed)
             {
                 seed = Menu.SetSeedValue;
             }
@@ -185,12 +256,19 @@ namespace TaijiRandomizer
 
             _rng = new Random(seed);
 
-
-            _currentGame = new()
+            if (_intendedGame != null)
             {
-                seed = seed,
-                set_seed = Menu.SetSeed
-            };
+                _currentGame = _intendedGame;
+                _intendedGame = null;
+            }
+            else
+            {
+                _currentGame = new()
+                {
+                    seed = seed,
+                    set_seed = Menu.SetSeed
+                };
+            }
 
 
 
@@ -234,6 +312,8 @@ namespace TaijiRandomizer
             // Scene currentScene = SceneManager.GetSceneByName("hi");
 
             LoggerInstance.Msg("Done!");
+
+            _shouldRandomize = false;
         }
 
         public override void OnDeinitializeMelon()
