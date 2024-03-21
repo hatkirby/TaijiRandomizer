@@ -22,6 +22,7 @@ namespace TaijiRandomizer
             }
 
             TutorialGenerator.Initialize();
+            GraveyardGenerator.Initialize();
         }
 
         public static void Generate()
@@ -104,6 +105,8 @@ namespace TaijiRandomizer
 
 
             GenerateTutorial();
+
+            GenerateGraveyard();
 
             GenerateGraveyardMetapuzzle();
         }
@@ -191,6 +194,169 @@ namespace TaijiRandomizer
             orderedGenerators[3].LockCell(coord4.x, coord4.y, cell4);
             orderedGenerators[3].LockCell(coord1.x, coord1.y, !cell1);
             orderedGenerators[3].Generate();
+        }
+
+        private static void GenerateGraveyard()
+        {
+            GraveyardGenerator generator;
+
+            // First exterior.
+            generator = new(158);
+            generator.LoadExistingStrings("Graveyard_GraveyardRoot/Graveyard_Gravestones");
+            generator.Generate();
+
+            // Second exterior.
+            generator = new(349);
+            generator.LoadExistingStrings("Graveyard_GraveyardRoot/Graveyard_Gravestones (4)");
+            generator.Generate();
+
+            // Third exterior.
+            generator = new(249);
+            generator.LoadExistingStrings("Graveyard_GraveyardRoot/Graveyard_Gravestones (5)/Graveyard_Gravestone_Head");
+            generator.Generate();
+
+            // Fourth exterior.
+            generator = new(13);
+            generator.LoadExistingStrings("Graveyard_GraveyardRoot/Graveyard_Gravestones (6)");
+            generator.Generate();
+
+            // Fifth exterior.
+            generator = new(7);
+            generator.LoadExistingStrings("Graveyard_GraveyardRoot/Graveyard_Gravestones (7)");
+            generator.Generate();
+
+            // Sixth exterior.
+            generator = new(156);
+            generator.LoadExistingStrings("Graveyard_GraveyardRoot/Graveyard_Gravestones (9)");
+            generator.Generate();
+
+            // Seventh exterior.
+            generator = new(201);
+            generator.LoadExistingStrings("Graveyard_GraveyardRoot/Graveyard_Gravestones (10)");
+            generator.Generate();
+
+            // Eighth exterior.
+            generator = new(28);
+            generator.LoadExistingStrings("Graveyard_GraveyardRoot/Graveyard_Gravestones (8)");
+            generator.Generate();
+
+            // Final exterior.
+            generator = new(331);
+            generator.CreateBackground(
+                "AreaRoot_Graveyard/GraphicsRoot/Graveyard_MountainPathRoot/Graveyard_TombRoot/Graveyard_TombFadeGroup0",
+                new Color(0.6274F, 0.6196F, 0.5215F, 1),
+                new Vector3(4.1609F, 288.0486F, 5),
+                new Vector2(3.5F, 0.6F));
+            generator.AddString(new(-1.45F, 0, 0));
+            generator.AddString(new(-1.45F, 0, 0));
+            generator.Generate();
+
+            // First interior.
+            generator = new(520);
+            generator.Inside = true;
+            generator.CreateBackground(
+                "AreaRoot_Graveyard/GraphicsRoot/Graveyard_MountainPathRoot/Graveyard_TombRoot",
+                new Color(0.6352F, 0.6274F, 0.5215F, 1),
+                new Vector3(-2.8F, 296.2F, 5),
+                new Vector3(6.4F, 0.55F, 1));
+            generator.AddString(new(-2.95F, 0, 0), true);
+            generator.AddString(new(0.55F, 0, 0));
+            generator.AddDot(Vector3.zero);
+            generator.Generate();
+
+            // Second interior.
+            generator = new(519);
+            generator.Inside = true;
+            generator.CreateBackground(
+                "AreaRoot_Graveyard/GraphicsRoot/Graveyard_MountainPathRoot/Graveyard_TombRoot",
+                new Color(0.6352F, 0.6274F, 0.5215F, 1),
+                new Vector3(-11.2F, 296.2F, 5),
+                new Vector3(6.4F, 0.55F, 1));
+            generator.AddString(new(-2.95F, 0, 0), true);
+            generator.AddString(new(0.55F, 0, 0));
+            generator.AddDot(Vector3.zero);
+            generator.Generate();
+
+            // Third interior.
+            generator = new(518);
+            generator.Inside = true;
+            generator.CreateBackground(
+                "AreaRoot_Graveyard/GraphicsRoot/Graveyard_MountainPathRoot/Graveyard_TombRoot",
+                new Color(0.6352F, 0.6274F, 0.5215F, 1),
+                new Vector3(-6.9F, 290.3F, 5),
+                new Vector3(3, 0.8F, 1));
+            generator.AddString(new(-1.15F, 0.2F, 0));
+            generator.AddString(new(-1.15F, -0.2F, 0), true);
+            generator.Generate();
+
+            // Fourth interior.
+            generator = new(523);
+            generator.Inside = true;
+            generator.CreateBackground(
+                "AreaRoot_Graveyard/GraphicsRoot/Graveyard_MountainPathRoot/Graveyard_TombRoot",
+                new Color(0.6352F, 0.6274F, 0.5215F, 1),
+                new Vector3(14.9F, 290.3F, 5),
+                new Vector3(3, 0.8F, 1));
+            generator.AddString(new(-1.15F, 0.05F, 0));
+            generator.AddString(new(-1.15F, -0.05F, 0), true);
+            generator.Generate();
+
+            // Fifth interior.
+            generator = new(521);
+            generator.Inside = true;
+            generator.Palindrome = true;
+            generator.CreateBackground(
+                "AreaRoot_Graveyard/GraphicsRoot/Graveyard_MountainPathRoot/Graveyard_TombRoot",
+                new Color(0.6352F, 0.6274F, 0.5215F, 1),
+                new Vector3(19F, 296.2F, 5),
+                new Vector3(3.5F, 0.6F, 1));
+            generator.AddString(new(-1.35F, 0.05F, 0));
+            generator.Generate();
+
+            // Sixth interior.
+            generator = new(524);
+            generator.Inside = true;
+            generator.CreateBackground(
+                "AreaRoot_Graveyard/GraphicsRoot/Graveyard_MountainPathRoot/Graveyard_TombRoot",
+                new Color(0.6352F, 0.6274F, 0.5215F, 1),
+                new Vector3(10.9F, 296.2F, 5),
+                new Vector3(6, 0.6F, 1));
+            generator.AddString(new(-2.75F, 0.05F, 0));
+            generator.AddString(new(-0.25F, 0.05F, 0), true);
+            generator.Generate();
+
+            // Flame puzzle.
+            // TODO: This is too tough. Please nerf.
+            generator = new(522);
+            generator.Inside = true;
+            generator.CreateBackground(
+                "AreaRoot_Graveyard/GraphicsRoot/Graveyard_MountainPathRoot/Graveyard_TombRoot",
+                new Color(0.6352F, 0.6274F, 0.5215F, 1),
+                new Vector3(4, 304.5F, 5),
+                new Vector3(3.5F, 0.55F, 1));
+            generator.AddString(new(-1.45F, 0.05F, 0));
+            generator.AddString(new(-1.45F, 0.05F, 0), true);
+            generator.Generate();
+
+            // Bonus entrance.
+            generator = new(186);
+            generator.LoadExistingStrings("Graveyard_BonusPuzzlesSectionRoot/Graveyard_Gravestones (13)");
+            generator.Generate();
+
+            // Bonus left.
+            generator = new(187);
+            generator.LoadExistingStrings("Graveyard_BonusPuzzlesSectionRoot/Graveyard_Gravestones (14)");
+            generator.Generate();
+
+            // Bonus middle.
+            generator = new(69);
+            generator.LoadExistingStrings("Graveyard_BonusPuzzlesSectionRoot/Graveyard_Gravestones (12)");
+            generator.Generate();
+
+            // Bonus right.
+            generator = new(188);
+            generator.LoadExistingStrings("Graveyard_BonusPuzzlesSectionRoot/Graveyard_Gravestones (15)");
+            generator.Generate();
         }
 
         private static void GenerateGraveyardMetapuzzle()
