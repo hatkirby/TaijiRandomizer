@@ -50,13 +50,6 @@ namespace TaijiRandomizer
 
         private RandomizedGameInformation? _intendedGame = null;
 
-        private GameObject? _templateWhiteBlock = null;
-        private GameObject? _templateBlackBlock = null;
-
-        public GameObject? TemplateWhiteBlock { get { return _templateWhiteBlock; } }
-
-        public GameObject? TemplateBlackBlock { get { return _templateBlackBlock; } }
-
         internal delegate void PuzzlePanelInitializer(PuzzlePanel panel);
 
         private Dictionary<uint, PuzzlePanelInitializer> _puzzlePanelInitializers = new();
@@ -197,12 +190,7 @@ namespace TaijiRandomizer
 
             Puzzle.Instantiate(3000, PuzzlePanel.PanelTypes.Snake, v3, 3, 4);
 
-            // Create template blocks for the tutorial-style puzzles.
-            _templateWhiteBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (20)"));
-            _templateWhiteBlock.active = false;
-
-            _templateBlackBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (25)"));
-            _templateBlackBlock.active = false;
+            PanelList.Initialize();
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)

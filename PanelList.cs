@@ -1,7 +1,29 @@
-﻿namespace TaijiRandomizer
+﻿using UnityEngine;
+
+namespace TaijiRandomizer
 {
     internal class PanelList
     {
+        private static Sprite? _graveyardMetapuzzleZero = null;
+        private static Sprite? _graveyardMetapuzzleOne = null;
+
+        public static void Initialize()
+        {
+            GameObject graveZeroStone = GameObject.Find("AreaRoot_Graveyard/GraphicsRoot/Graveyard_GraveyardRoot/Graveyard_Nongameplay_GravestoneRoot/Graveyard_Nongameplay_Gravestone (23)");
+            if (graveZeroStone != null)
+            {
+                _graveyardMetapuzzleZero = graveZeroStone.GetComponent<SpriteRenderer>().sprite;
+            }
+
+            GameObject graveOneStone = GameObject.Find("AreaRoot_Graveyard/GraphicsRoot/Graveyard_GraveyardRoot/Graveyard_Nongameplay_GravestoneRoot/Graveyard_Nongameplay_Gravestone (29)");
+            if (graveOneStone != null)
+            {
+                _graveyardMetapuzzleOne = graveOneStone.GetComponent<SpriteRenderer>().sprite;
+            }
+
+            TutorialGenerator.Initialize();
+        }
+
         public static void Generate()
         {
             Generator generator = new(26);
@@ -82,6 +104,8 @@
 
 
             GenerateTutorial();
+
+            GenerateGraveyardMetapuzzle();
         }
 
         private static void GenerateTutorial()
@@ -122,9 +146,9 @@
             List<uint> orderedIds = tutorialEndIds.OrderBy(_ => Randomizer.Instance?.Rng?.Next()).ToList();
 
             List<Puzzle.Coord> coords = new();
-            for (int y=0;y<3;y++)
+            for (int y = 0; y < 3; y++)
             {
-                for (int x=0;x<3;x++)
+                for (int x = 0; x < 3; x++)
                 {
                     coords.Add(new(x, y));
                 }
@@ -155,11 +179,11 @@
             orderedGenerators[0].LockCell(coord1.x, coord1.y, cell1);
             orderedGenerators[0].LockCell(coord2.x, coord2.y, !cell2);
             orderedGenerators[0].Generate();
-            
+
             orderedGenerators[1].LockCell(coord2.x, coord2.y, cell2);
             orderedGenerators[1].LockCell(coord3.x, coord3.y, !cell3);
             orderedGenerators[1].Generate();
-            
+
             orderedGenerators[2].LockCell(coord3.x, coord3.y, cell3);
             orderedGenerators[2].LockCell(coord4.x, coord4.y, !cell4);
             orderedGenerators[2].Generate();
@@ -167,6 +191,93 @@
             orderedGenerators[3].LockCell(coord4.x, coord4.y, cell4);
             orderedGenerators[3].LockCell(coord1.x, coord1.y, !cell1);
             orderedGenerators[3].Generate();
+        }
+
+        private static void GenerateGraveyardMetapuzzle()
+        {
+            if (_graveyardMetapuzzleZero == null || _graveyardMetapuzzleOne == null)
+            {
+                Randomizer.Instance?.LoggerInstance.Msg("Could not generate graveyard metapuzzle because grave sprites are not initialized.");
+                return;
+            }
+
+            bool[,] binaryStrings = new bool[5, 8];
+
+            // Generate the three full binary strings.
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    binaryStrings[i, j] = ((Randomizer.Instance?.Rng?.Next(0, 2) ?? 0) == 0);
+                }
+            }
+
+            // Two binary strings have to be palindromic, so let's generate those here.
+            for (int i = 3; i < 5; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    bool value = ((Randomizer.Instance?.Rng?.Next(0, 2) ?? 0) == 0);
+                    binaryStrings[i, j] = value;
+                    binaryStrings[i, 7 - j] = value;
+                }
+            }
+
+            // Write the puzzle.
+            Puzzle puzzle = new();
+            puzzle.Load(109);
+            puzzle.Clear();
+
+            for (int j = 0; j < 8; j++)
+            {
+                int total = 0;
+                for (int i = 0; i < 5; i++)
+                {
+                    if (binaryStrings[i, j])
+                    {
+                        total++;
+                    }
+                }
+
+                puzzle.SetSolution(j, 0, total % 2 == 1);
+            }
+
+            puzzle.Save(109);
+            puzzle.WriteSolution(109);
+
+            // Replace the gravestone sprites.
+            int[,] graveIds = {
+                { 40, 39, 35, 38, 36, 33, 37, 34 },
+                { 30, 29, 28, 27, 26, 25, 24, 23 },
+                { 16, 31, 18, 32, 19, 20, 21, 22 },
+                { 46, 42, 41, 45, 43, 47, 48, 57 },
+                { 54, 52, 50, 53, 51, 55, 49, 56 }
+            };
+
+            for (int i = 0; i < 5; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    string path = $"AreaRoot_Graveyard/GraphicsRoot/Graveyard_GraveyardRoot/Graveyard_Nongameplay_GravestoneRoot/Graveyard_Nongameplay_Gravestone ({graveIds[i, j]})";
+                    GameObject graveObject = GameObject.Find(path);
+                    if (graveObject == null)
+                    {
+                        Randomizer.Instance?.LoggerInstance.Msg($"Could not find grave object {path}");
+                        continue;
+                    }
+
+                    SpriteRenderer graveSprite = graveObject.GetComponent<SpriteRenderer>();
+
+                    if (binaryStrings[i, j])
+                    {
+                        graveSprite.sprite = _graveyardMetapuzzleOne;
+                    }
+                    else
+                    {
+                        graveSprite.sprite = _graveyardMetapuzzleZero;
+                    }
+                }
+            }
         }
     }
 }
