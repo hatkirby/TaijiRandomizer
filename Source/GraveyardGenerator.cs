@@ -162,12 +162,6 @@ namespace TaijiRandomizer
                     bool value = ((Randomizer.Instance?.Rng?.Next(0, 2) ?? 0) == 0);
                     binaryString.onesAndZeros[j] = value;
 
-                    int spriteIndex = j;
-                    if (!binaryString.no_dot)
-                    {
-                        spriteIndex++;
-                    }
-
                     if (value)
                     {
                         binaryString.sprites[j + 1].GetComponent<SpriteRenderer>().sprite = binaryString.one;
