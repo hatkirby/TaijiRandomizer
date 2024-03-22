@@ -37,6 +37,7 @@ namespace TaijiRandomizer
         }
 
         private uint? _shouldLoadFile = null;
+        private bool _firstLoad = true;
 
         public struct RandomizedGameInformation
         {
@@ -161,8 +162,11 @@ namespace TaijiRandomizer
 
                 Instance._shouldLoadFile = Globals.activeSaveIndex;
 
-                string currentSceneName = SceneManager.GetActiveScene().name;
-                SceneManager.LoadScene(currentSceneName);
+                if (!Instance._firstLoad)
+                {
+                    string currentSceneName = SceneManager.GetActiveScene().name;
+                    SceneManager.LoadScene(currentSceneName);
+                }
             }
         }
 
@@ -200,6 +204,19 @@ namespace TaijiRandomizer
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
+            if (_firstLoad)
+            {
+                _firstLoad = false;
+
+                if (_shouldRandomize)
+                {
+                    string currentSceneName = SceneManager.GetActiveScene().name;
+                    SceneManager.LoadScene(currentSceneName);
+                }
+
+                return;
+            }
+
             if (_shouldRandomize)
             {
                 SaveSystem.GenerateInstanceMap();
