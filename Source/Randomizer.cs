@@ -169,6 +169,11 @@ namespace TaijiRandomizer
         public override void OnInitializeMelon()
         {
             _instance = this;
+
+            // Prevent the file from getting too big.
+            SaveManager.Load();
+            SaveManager.ClearOldData();
+            SaveManager.Save();
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)

@@ -74,6 +74,25 @@ namespace TaijiRandomizer
             return _lookup[(slot, index)];
         }
 
+        public static void ClearOldData()
+        {
+            List<SaveInfo> updatedList = new();
+
+            foreach (SaveInfo saveInfo in _saves)
+            {
+                if (!File.Exists($"{Application.persistentDataPath}/saves/slot{saveInfo.Slot}/{saveInfo.Index}.sav"))
+                {
+                    _lookup.Remove((saveInfo.Slot, saveInfo.Index));
+                }
+                else
+                {
+                    updatedList.Add(saveInfo);
+                }
+            }
+
+            _saves = updatedList;
+        }
+
         [HarmonyPatch(typeof(SaveSystem), nameof(SaveSystem.Save))]
         static class SavePatch
         {
