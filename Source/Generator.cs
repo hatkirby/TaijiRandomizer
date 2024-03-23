@@ -1,4 +1,5 @@
-﻿using static TaijiRandomizer.Canvas;
+﻿using TaijiRandomizer.Source;
+using static TaijiRandomizer.Canvas;
 
 namespace TaijiRandomizer
 {

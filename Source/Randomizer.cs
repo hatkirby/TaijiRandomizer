@@ -1,9 +1,9 @@
 ﻿using HarmonyLib;
 using Il2Cpp;
-using Il2CppInterop.Runtime;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using Random = System.Random;
 
@@ -32,12 +32,29 @@ namespace TaijiRandomizer
             get { return _rng; }
         }
 
-        private GameObject? _templateWhiteBlock = null;
-        private GameObject? _templateBlackBlock = null;
+        private bool _shouldRandomize = false;
 
-        public GameObject? TemplateWhiteBlock { get { return _templateWhiteBlock; } }
+        public bool ShouldRandomize
+        {
+            get { return _shouldRandomize; }
 
-        public GameObject? TemplateBlackBlock { get { return _templateBlackBlock; } }
+            set { _shouldRandomize = value; }
+        }
+
+        private uint? _shouldLoadFile = null;
+        private bool _firstLoad = true;
+
+        public struct RandomizedGameInformation
+        {
+            public int seed;
+            public bool set_seed;
+        }
+
+        private RandomizedGameInformation? _currentGame = null;
+
+        public RandomizedGameInformation? CurrentGame => _currentGame;
+
+        private RandomizedGameInformation? _intendedGame = null;
 
         internal delegate void PuzzlePanelInitializer(PuzzlePanel panel);
 
@@ -46,6 +63,18 @@ namespace TaijiRandomizer
         internal void SetPuzzlePanelInitializer(uint id, PuzzlePanelInitializer initializer)
         {
             _puzzlePanelInitializers[id] = initializer;
+        }
+
+        private Dictionary<string, GameObject> _gameObjectCache = new();
+
+        public GameObject LookupGameObject(string path)
+        {
+            if (!_gameObjectCache.ContainsKey(path))
+            {
+                _gameObjectCache[path] = GameObject.Find(path);
+            }
+
+            return _gameObjectCache[path];
         }
 
         [HarmonyPatch(typeof(PuzzlePanel), nameof(PuzzlePanel.Update))]
@@ -89,70 +118,82 @@ namespace TaijiRandomizer
             }
         }
 
-        [HarmonyPatch(typeof(PauseMenu), "InitializeMenus")]
-        static class InitializeMenuPatch
+        [HarmonyPatch(typeof(SaveSystem), nameof(SaveSystem.Load))]
+        static class LoadPatch
         {
-            public static PauseMenu? pauseMenu = null;
-
-            public static PauseMenu.MenuItem CreateMenuItem(string text)
+            public static void Postfix()
             {
-                GameObject menuDisableGroup = pauseMenu.menuDisableGroup;
-                Transform transform = menuDisableGroup.transform;
-
-                GameObject originalOption = GameObject.Find("PauseMenuOption");
-                GameObject menuObject = GameObject.Instantiate(originalOption);
-                menuObject.transform.parent = transform;
-
-                PauseMenu.MenuItem menuItem = new()
+                if (Instance == null)
                 {
-                    obj = menuObject,
-                    locString = "MENU_OFF",
-                    type = PauseMenu.WidgetType.subMenu,
-                    text = menuObject.GetComponent<TextMeshPro>(),
-                    func = null,
-                    belowMenu = null,
-                    hidden = false
-                };
+                    return;
+                }
 
-                menuItem.text.m_HorizontalAlignment = HorizontalAlignmentOptions.Right;
-                menuItem.text.m_VerticalAlignment = VerticalAlignmentOptions.Middle;
-                menuItem.text.m_havePropertiesChanged = true;
-                menuItem.text.SetVerticesDirty();
-                menuItem.text.SetText(text);
-                menuItem.text.color = Constants.WHITECLEAR_COLOR;
+                SaveManager.Load();
 
-                return menuItem;
+                bool saveIsRandomized = SaveManager.IsRandomizedFile(Globals.currentSaveSlot, Globals.activeSaveIndex);
+                bool currentIsRandomized = Instance.CurrentGame.HasValue;
+
+                if (saveIsRandomized == currentIsRandomized)
+                {
+                    if (saveIsRandomized)
+                    {
+                        SaveManager.SaveInfo saveInfo = SaveManager.GetSaveInfo(Globals.currentSaveSlot, Globals.activeSaveIndex);
+                        if (saveInfo.Seed == Instance.CurrentGame.Value.seed)
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
+                if (saveIsRandomized)
+                {
+                    SaveManager.SaveInfo saveInfo = SaveManager.GetSaveInfo(Globals.currentSaveSlot, Globals.activeSaveIndex);
+
+                    Instance._shouldRandomize = true;
+                    Instance._intendedGame = new()
+                    {
+                        seed = saveInfo.Seed,
+                        set_seed = false
+                    };
+                }
+                else
+                {
+                    Instance._shouldRandomize = false;
+                }
+
+                Instance._shouldLoadFile = Globals.activeSaveIndex;
+
+                if (!Instance._firstLoad)
+                {
+                    string currentSceneName = SceneManager.GetActiveScene().name;
+                    SceneManager.LoadScene(currentSceneName);
+                }
             }
-
-            public static PauseMenu.MenuItem CreateActionMenuItem(string text, Action action)
-            {
-                PauseMenu.MenuItem menuItem = CreateMenuItem(text);
-                menuItem.func = DelegateSupport.ConvertDelegate<PauseMenu.menuFunctionDelegate>(action);
-
-                return menuItem;
-            }
-
-            public static void Postfix(PauseMenu __instance)
-            {
-                pauseMenu = __instance;
-
-                __instance.mainMenu.items.Add(CreateActionMenuItem("randomizer", new Action(() => Instance?.OnRandomizerMenuOpened(pauseMenu))));
-            }
-        }
-
-        public void OnRandomizerMenuOpened(PauseMenu pauseMenu)
-        {
-            GeneratePuzzles();
-            pauseMenu.ResumeGame();
         }
 
         public override void OnInitializeMelon()
         {
             _instance = this;
+
+            // Prevent the file from getting too big.
+            SaveManager.Load();
+            SaveManager.ClearOldData();
+            SaveManager.Save();
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
+            if (!_shouldRandomize)
+            {
+                return;
+            }
+
+            _gameObjectCache.Clear();
+
             SaveSystem.GenerateInstanceMap();
 
             GameObject.Find("AreaRoot_BonusPuzzles/GraphicsRoot/BonusArea_FadeGroup/PuzzlePanel (234)").active = false;
@@ -162,37 +203,87 @@ namespace TaijiRandomizer
             v3.y = 29.53F;
 
             Puzzle.Instantiate(3000, PuzzlePanel.PanelTypes.Snake, v3, 3, 4);
+
+            PanelList.Initialize();
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
         {
-            GeneratePuzzles();
+            if (_firstLoad)
+            {
+                _firstLoad = false;
+
+                if (_shouldRandomize)
+                {
+                    string currentSceneName = SceneManager.GetActiveScene().name;
+                    SceneManager.LoadScene(currentSceneName);
+                }
+
+                return;
+            }
+
+            if (_shouldRandomize)
+            {
+                SaveSystem.GenerateInstanceMap();
+
+                GeneratePuzzles();
+            }
+            else
+            {
+                _currentGame = null;
+            }
+
+            if (_shouldLoadFile != null)
+            {
+                SaveSystem.Load(0, false, _shouldLoadFile.Value);
+                _shouldLoadFile = null;
+            }
         }
 
         public void GeneratePuzzles()
         {
-            
-            
-            
 
 
-            
+
+
+
+
 
             LoggerInstance.Msg("Start generation...");
 
-            Random seedRng = new();
-            int seed = seedRng.Next(100000, 1000000);
+            int seed;
+
+            if (_intendedGame != null)
+            {
+                seed = _intendedGame.Value.seed;
+            }
+            else if (Menu.SetSeed)
+            {
+                seed = Menu.SetSeedValue;
+            }
+            else
+            {
+                Random seedRng = new();
+                seed = seedRng.Next(1, 10000000);
+            }
+
             LoggerInstance.Msg($"Seed: {seed}");
 
             _rng = new Random(seed);
 
-            // Create template blocks for the tutorial-style puzzles.
-            _templateWhiteBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (20)"));
-            _templateWhiteBlock.active = false;
-
-            _templateBlackBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (25)"));
-            _templateBlackBlock.active = false;
-
+            if (_intendedGame != null)
+            {
+                _currentGame = _intendedGame;
+                _intendedGame = null;
+            }
+            else
+            {
+                _currentGame = new()
+                {
+                    seed = seed,
+                    set_seed = Menu.SetSeed
+                };
+            }
 
 
 
@@ -201,7 +292,7 @@ namespace TaijiRandomizer
             //gen3000.SetWildcardFlowers(4);
             //gen3000.Generate();
 
-            
+
 
 
 
@@ -234,6 +325,8 @@ namespace TaijiRandomizer
             // Scene currentScene = SceneManager.GetSceneByName("hi");
 
             LoggerInstance.Msg("Done!");
+
+            _shouldRandomize = false;
         }
 
         public override void OnDeinitializeMelon()

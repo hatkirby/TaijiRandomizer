@@ -4,6 +4,20 @@ namespace TaijiRandomizer
 {
     internal class TutorialGenerator
     {
+        private static GameObject? _templateWhiteBlock = null;
+        private static GameObject? _templateBlackBlock = null;
+
+        public static void Initialize()
+        {
+            _templateWhiteBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (20)"));
+            _templateWhiteBlock.hideFlags = HideFlags.HideAndDontSave;
+            _templateWhiteBlock.active = false;
+
+            _templateBlackBlock = GameObject.Instantiate(GameObject.Find("StartingArea_HintPillarBase (7)/StartingArea_HintBlocks_0 (25)"));
+            _templateBlackBlock.hideFlags = HideFlags.HideAndDontSave;
+            _templateBlackBlock.active = false;
+        }
+
         private readonly uint _id;
         private readonly int _minGaps;
         private readonly int _maxGaps;
@@ -49,15 +63,21 @@ namespace TaijiRandomizer
             _puzzle.WriteSolution(_id);
 
             // Deactivate the blocks that are already there.
-            GameObject pillarBase = GameObject.Find(_path);
+            GameObject pillarBase = Randomizer.Instance.LookupGameObject(_path);
             for (int i=0; i < pillarBase.transform.childCount; i++)
             {
                 GameObject child = pillarBase.transform.GetChild(i).gameObject;
 
-                if (child.name.StartsWith("StartingArea_HintBlocks_0"))
+                if (child.name.StartsWith("StartingArea_HintBlocks_0") || child.name.StartsWith("TutorialBlock_"))
                 {
-                    child.active = false;
+                    GameObject.Destroy(child);
                 }
+            }
+
+            if (_templateBlackBlock == null || _templateWhiteBlock == null)
+            {
+                Randomizer.Instance?.LoggerInstance.Msg("Could not generate tutorial puzzle because block templates are not initialized.");
+                return;
             }
 
             // Instantiate blocks for the puzzle.
@@ -74,10 +94,10 @@ namespace TaijiRandomizer
                     GameObject templateToUse;
                     if (cellType == Canvas.CellType.Off)
                     {
-                        templateToUse = Randomizer.Instance?.TemplateBlackBlock;
+                        templateToUse = _templateBlackBlock;
                     } else
                     {
-                        templateToUse = Randomizer.Instance?.TemplateWhiteBlock;
+                        templateToUse = _templateWhiteBlock;
                     }
 
                     GameObject newBlock = GameObject.Instantiate(templateToUse);

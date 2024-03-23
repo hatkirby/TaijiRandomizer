@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace TaijiRandomizer
+namespace TaijiRandomizer.Source
 {
     internal class Solver
     {
@@ -98,7 +98,7 @@ namespace TaijiRandomizer
                             break;
                         }
                     }
-                    _depthEnd =_iterations + solutions.Count;
+                    _depthEnd = _iterations + solutions.Count;
                 }
                 _iterations++;
                 List<bool> next = solutions[0];
@@ -147,7 +147,7 @@ namespace TaijiRandomizer
                 int l = locks[Randomizer.RandomInt(locks.Count)];
                 List<bool> altSolution = new(_targetSolution);
                 altSolution[l] = !_targetSolution[l];
-                if ((false && solutions.Any(s => s.SequenceEqual(altSolution))) ||
+                if (false && solutions.Any(s => s.SequenceEqual(altSolution)) ||
                     solutions.All(s => s[l] == _targetSolution[l]))
                 {
                     puzzle.UnlockTile(l);
@@ -177,12 +177,12 @@ namespace TaijiRandomizer
 
         private List<bool> GetCurrentSolution()
         {
-            List<bool> solution = new(); 
+            List<bool> solution = new();
             for (int y = 0; y < _puzzle.Height; y++)
             {
                 for (int x = 0; x < _puzzle.Width; x++)
                 {
-                    if (!(IsTileSolvedYet(x, y)))
+                    if (!IsTileSolvedYet(x, y))
                     {
                         return solution;
                     }
